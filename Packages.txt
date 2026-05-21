@@ -1,0 +1,83 @@
+npm install @react-navigation/native
+npm install @react-navigation/native-stack
+npm install react-native-screens react-native-safe-area-context
+npm install react-native-gesture-handler react-native-reanimated
+npm install react-native-vector-icons
+npm install react-native-maps
+npm install react-native-worklets
+npm install @react-navigation/bottom-tabs
+npm install @react-navigation/drawer
+
+
+
+
+
+--------------------------------------------------BY SIR--------------------------------------------------
+------------ Drop Down Element ---------------
+npm install react-native-element-dropdown
+
+------------ Stack and Bottom Navigation -------
+
+npm install @react-navigation/native
+npm install @react-navigation/stack
+npm install @react-navigation/bottom-tabs
+npm install react-native-screens react-native-safe-area-context react-native-gesture-handler react-native-reanimated
+
+
+------------- Radio Button & CheckBox ----------
+
+npm install react-native-paper
+npm install react-native-vector-icons
+
+NOTE: Add following line in android/app/buil.gradle file 
+apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
+
+
+------------- Quick SQLite Database ------------------
+npm i react-native-quick-sqlite
+
+
+------------- Launch Camera or Gallery ----------
+npm install react-native-image-picker
+
+
+------------- Async Storage/ Shared Preferences ----------------------
+npm install @react-native-async-storage/async-storage
+
+
+-------------- Google Maps -------------------------
+npm install react-native-maps
+
+
+----------------------------------------------------
+npm install react-native-worklets
+
+
+
+---------------Clean & Build Again-----------------
+cd android
+gradlew clean
+cd ..
+npx react-native run-android
+
+
+
+
+
+
+
+taskkill /F /IM node.exe
+taskkill /F /IM java.exe
+taskkill /F /IM gradle.exe
+
+
+
+
+Remove-Item -Recurse -Force -ErrorAction SilentlyContinue node_modules
+Remove-Item -Recurse -Force -ErrorAction SilentlyContinue android\.cxx
+Remove-Item -Recurse -Force -ErrorAction SilentlyContinue android\app\build
+Remove-Item -Recurse -Force -ErrorAction SilentlyContinue android\build
+Remove-Item -Force -ErrorAction SilentlyContinue package-lock.json
+
+
+npm install

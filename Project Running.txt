@@ -1,0 +1,251 @@
+E:\FYP\HouseOfTutor>npx react-native run-android      
+info Launching emulator...
+info Successfully launched emulator.
+info Installing the app...
+
+> Task :react-native-safe-area-context:processDebugManifest
+package="com.th3rdwave.safeareacontext" found in source AndroidManifest.xml: E:\FYP\HouseOfTutor\node_modules\react-native-safe-area-context\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.th3rdwave.safeareacontext" from the source AndroidManifest.xml: E:\FYP\HouseOfTutor\node_modules\react-native-safe-area-context\android\src\main\AndroidManifest.xml.
+
+> Task :react-native-vector-icons:processDebugManifest
+package="com.oblador.vectoricons" found in source AndroidManifest.xml: E:\FYP\HouseOfTutor\node_modules\react-native-vector-icons\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.oblador.vectoricons" from the source AndroidManifest.xml: E:\FYP\HouseOfTutor\node_modules\react-native-vector-icons\android\src\main\AndroidManifest.xml.
+
+> Task :react-native-worklets:compileDebugJavaWithJavac
+
+> Task :react-native-reanimated:compileDebugJavaWithJavac
+
+> Task :react-native-maps:compileDebugJavaWithJavac
+
+> Task :react-native-vector-icons:compileDebugJavaWithJavac
+
+> Task :react-native-safe-area-context:compileDebugKotlin
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-safe-area-context/android/src/main/java/com/th3rdwave/safeareacontext/SafeAreaProviderManager.kt:39:19 'fun getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-safe-area-context/android/src/main/java/com/th3rdwave/safeareacontext/SafeAreaView.kt:9:8 'class UIManagerModule : ReactContextBaseJavaModule, LifecycleEventListener, UIManager' is deprecated. Deprecated in Java.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-safe-area-context/android/src/main/java/com/th3rdwave/safeareacontext/SafeAreaView.kt:50:54 'class UIManagerModule : ReactContextBaseJavaModule, LifecycleEventListener, UIManager' is deprecated. Deprecated in Java.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-safe-area-context/android/src/main/java/com/th3rdwave/safeareacontext/SafeAreaView.kt:59:23 'val uiImplementation: UIImplementation!' is deprecated. Deprecated in Java.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-safe-area-context/android/src/main/java/com/th3rdwave/safeareacontext/SafeAreaViewShadowNode.kt:9:32 'class LayoutShadowNode : ReactShadowNodeImpl' is deprecated. This class is part of Legacy Architecture and will be removed in a future release.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-safe-area-context/android/src/main/java/com/th3rdwave/safeareacontext/SafeAreaViewShadowNode.kt:110:61 'class NativeViewHierarchyOptimizer : Any' is deprecated. This class is part of Legacy Architecture and will be removed 
+in a future release.
+
+> Task :react-native-gesture-handler:compileDebugKotlin
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-gesture-handler/android/src/main/java/com/swmansion/gesturehandler/react/Extensions.kt:8:8 'class UIManagerModule : ReactContextBaseJavaModule, LifecycleEventListener, UIManager' is deprecated. Deprecated in Java.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-gesture-handler/android/src/main/java/com/swmansion/gesturehandler/react/Extensions.kt:13:29 'class UIManagerModule : ReactContextBaseJavaModule, LifecycleEventListener, UIManager' is deprecated. Deprecated in Java.        
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-gesture-handler/android/src/main/java/com/swmansion/gesturehandler/react/Extensions.kt:14:32 'class UIManagerModule : ReactContextBaseJavaModule, LifecycleEventListener, UIManager' is deprecated. Deprecated in Java.        
+
+> Task :react-native-screens:compileDebugKotlin
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/RNScreensPackage.kt:62:9 The 
+corresponding parameter in the supertype 'BaseReactPackage' is named 'name'. This may cause problems when calling this function with named arguments.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/RNScreensPackage.kt:63:9 The 
+corresponding parameter in the supertype 'BaseReactPackage' is named 'reactContext'. This may cause problems when calling this function with named arguments.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/RNScreensPackage.kt:76:17 'constructor(name: String, className: String, canOverrideExistingModule: Boolean, needsEagerInit: Boolean, hasConstants: Boolean, isCxxModule: 
+Boolean, isTurboModule: Boolean): ReactModuleInfo' is deprecated. This constructor is deprecated and will be removed in the future. Use ReactModuleInfo(String, String, boolean, boolean, boolean, boolean)].
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/Screen.kt:26:8 'class UIManagerModule : ReactContextBaseJavaModule, LifecycleEventListener, UIManager' is deprecated. Deprecated in Java.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/Screen.kt:56:77 Unchecked cast of '(CoordinatorLayout.Behavior<View!>?..CoordinatorLayout.Behavior<*>?)' to 'BottomSheetBehavior<Screen>'.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/Screen.kt:59:33 'fun getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/Screen.kt:428:42 'class UIManagerModule : ReactContextBaseJavaModule, LifecycleEventListener, UIManager' is deprecated. Deprecated in Java.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/Screen.kt:691:14 'fun getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenContainer.kt:250:18 'fun getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.       
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenContainer.kt:260:18 'fun getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.       
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenContainerViewManager.kt:6:8 'class LayoutShadowNode : ReactShadowNodeImpl' is deprecated. This class is part of Legacy Architecture and will be removed in a future release.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenContainerViewManager.kt:56:78 'class LayoutShadowNode : ReactShadowNodeImpl' is deprecated. This class is part of Legacy Architecture and will be removed in a future release.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenFragment.kt:225:37 'fun getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.        
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenFragment.kt:242:14 'fun getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.        
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenFragment.kt:258:22 'fun getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.        
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenFragment.kt:325:22 'fun getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.        
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenModalFragment.kt:181:22 'fun getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.   
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStack.kt:106:14 'fun getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackFragment.kt:165:18 'fun getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.   
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackFragment.kt:222:31 'var targetElevation: Float' is deprecated. Deprecated in Java.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackFragment.kt:225:13 'fun setHasOptionsMenu(p0: Boolean): Unit' is deprecated. Deprecated in Java.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackFragment.kt:404:18 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackFragment.kt:411:22 'fun onPrepareOptionsMenu(p0: Menu): Unit' is deprecated. Deprecated in Java.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackFragment.kt:414:18 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackFragment.kt:419:22 'fun onCreateOptionsMenu(p0: Menu, p1: MenuInflater): Unit' is deprecated. Deprecated in Java.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackHeaderConfig.kt:155:14 'fun getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackHeaderConfig.kt:165:14 'fun getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackHeaderConfig.kt:441:22 'val reactNativeHost: ReactNativeHost' is deprecated. You should not use ReactNativeHost directly in the New Architecture. Use ReactHost instead.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackHeaderConfigShadowNode.kt:4:8 'class LayoutShadowNode : ReactShadowNodeImpl' is deprecated. This class is part of Legacy Architecture and will be removed in a future release.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackHeaderConfigShadowNode.kt:10:5 'class LayoutShadowNode : ReactShadowNodeImpl' is deprecated. This class is part of Legacy Architecture and will be removed in 
+a future release.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackHeaderConfigViewManager.kt:9:8 'class LayoutShadowNode : ReactShadowNodeImpl' is deprecated. This class is part of Legacy Architecture and will be removed in 
+a future release.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackHeaderConfigViewManager.kt:37:78 'class LayoutShadowNode : ReactShadowNodeImpl' is deprecated. This class is part of Legacy Architecture and will be removed in a future release.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackViewManager.kt:6:8 'class LayoutShadowNode : ReactShadowNodeImpl' is deprecated. This class is part of Legacy Architecture and will be removed in a future release.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenStackViewManager.kt:65:78 'class LayoutShadowNode : ReactShadowNodeImpl' is deprecated. This class is part of Legacy Architecture and will be removed in a future release.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:48:42 'fun replaceSystemWindowInsets(p0: Int, p1: Int, p2: Int, p3: Int): @NonNull() WindowInsetsCompat' is deprecated. Deprecated in Java.        
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:49:39 'val systemWindowInsetLeft: Int' is deprecated. Deprecated in Java.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:51:39 'val systemWindowInsetRight: Int' is deprecated. Deprecated in Java.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenWindowTraits.kt:52:39 'val systemWindowInsetBottom: Int' is deprecated. Deprecated in Java.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreensModule.kt:109:14 'fun 
+getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreensShadowNode.kt:4:8 'class LayoutShadowNode : ReactShadowNodeImpl' is deprecated. This class is part of Legacy Architecture and will be removed in a future release.w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreensShadowNode.kt:5:8 'class NativeViewHierarchyManager : Any' is deprecated. Deprecated in Java.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreensShadowNode.kt:6:8 'class NativeViewHierarchyOptimizer : Any' is deprecated. This class is part of Legacy Architecture and will be removed in a future release.    
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreensShadowNode.kt:7:8 'class UIManagerModule : ReactContextBaseJavaModule, LifecycleEventListener, UIManager' is deprecated. Deprecated in Java.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreensShadowNode.kt:11:5 'class LayoutShadowNode : ReactShadowNodeImpl' is deprecated. This class is part of Legacy Architecture and will be removed in a future release.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreensShadowNode.kt:12:63 'class NativeViewHierarchyOptimizer : Any' is deprecated. This class is part of Legacy Architecture and will be removed in a future release.  
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreensShadowNode.kt:14:34 'class UIManagerModule : ReactContextBaseJavaModule, LifecycleEventListener, UIManager' is deprecated. Deprecated in Java.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreensShadowNode.kt:14:106 'class NativeViewHierarchyManager : Any' is deprecated. Deprecated in Java.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreensShadowNode.kt:18:51 'fun resolveView(p0: Int): View?' is deprecated. Deprecated in Java.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/SearchBarView.kt:137:29 'fun 
+getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:7:8 'object ReactFeatureFlags : Any' is deprecated. Use com.facebook.react.internal.featureflags.ReactNativeFeatureFlags instead.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:25:13 'object ReactFeatureFlags : Any' is deprecated. Use com.facebook.react.internal.featureflags.ReactNativeFeatureFlags instead.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:32:9 The corresponding parameter in the supertype 'ReactViewGroup' is named 'left'. This may cause problems when calling this function with named arguments.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:33:9 The corresponding parameter in the supertype 'ReactViewGroup' is named 'top'. This may cause problems when calling this function with named arguments.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:34:9 The corresponding parameter in the supertype 'ReactViewGroup' is named 'right'. This may cause problems when calling this function with named arguments.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:35:9 The corresponding parameter in the supertype 'ReactViewGroup' is named 'bottom'. This may cause problems when calling this 
+function with named arguments.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:71:9 The corresponding parameter in the supertype 'RootView' is named 'childView'. This may cause problems when calling this function with named arguments.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:72:9 The corresponding parameter in the supertype 'RootView' is named 'ev'. This may cause problems when calling this function with named arguments.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:79:46 The corresponding parameter in the supertype 'RootView' is named 'ev'. This may cause problems when calling this function 
+with named arguments.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:83:9 The corresponding parameter in the supertype 'RootView' is named 'childView'. This may cause problems when calling this function with named arguments.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:84:9 The corresponding parameter in the supertype 'RootView' is named 'ev'. This may cause problems when calling this function with named arguments.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/BottomSheetDialogRootView.kt:95:34 The corresponding parameter in the supertype 'RootView' is named 't'. This may cause problems when calling this function with named arguments.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/DimmingView.kt:64:9 The corresponding parameter in the supertype 'ReactCompoundView' is named 'touchX'. This may cause problems when calling this function with named arguments.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/DimmingView.kt:65:9 The corresponding parameter in the supertype 'ReactCompoundView' is named 'touchY'. This may cause problems when calling this function with named arguments.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/DimmingView.kt:69:9 The corresponding parameter in the supertype 'ReactCompoundViewGroup' is named 'touchX'. This may cause problems when calling this function with named arguments.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/bottomsheet/DimmingView.kt:70:9 The corresponding parameter in the supertype 'ReactCompoundViewGroup' is named 'touchY'. This may cause problems when calling this function with named arguments.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/gamma/common/event/BaseEventEmitter.kt:12:38 'fun getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/gamma/tabs/TabsHostViewManager.kt:37:9 The corresponding parameter in the supertype 'TabsHostViewManager' is named 'view'. This may cause problems when calling this function with named arguments.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/safearea/SafeAreaView.kt:19:8 'class UIManagerModule : ReactContextBaseJavaModule, LifecycleEventListener, UIManager' is deprecated. Deprecated in Java.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/safearea/SafeAreaView.kt:153:45 'fun consumeDisplayCutout(): @NonNull() WindowInsetsCompat' is deprecated. Deprecated in Java.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/safearea/SafeAreaView.kt:194:58 'class UIManagerModule : ReactContextBaseJavaModule, LifecycleEventListener, UIManager' is deprecated. Deprecated in Java.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/safearea/SafeAreaView.kt:201:31 'val uiImplementation: UIImplementation!' is deprecated. Deprecated in Java.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/safearea/paper/SafeAreaViewShadowNode.kt:7:8 'class LayoutShadowNode : ReactShadowNodeImpl' is deprecated. This class is part of Legacy Architecture and will be removed 
+in a future release.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/safearea/paper/SafeAreaViewShadowNode.kt:8:8 'class NativeViewHierarchyOptimizer : Any' is deprecated. This class is part of Legacy Architecture and will be removed in a future release.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/safearea/paper/SafeAreaViewShadowNode.kt:14:32 'class LayoutShadowNode : ReactShadowNodeImpl' is deprecated. This class is part of Legacy Architecture and will be removed in a future release.
+w: file:///E:/FYP/HouseOfTutor/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/safearea/paper/SafeAreaViewShadowNode.kt:83:63 'class NativeViewHierarchyOptimizer : Any' is deprecated. This class is part of Legacy Architecture and will be removed in a future release.
+
+> Task :react-native-worklets:buildCMakeDebug[arm64-v8a][worklets]
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-worklets\android\build\intermediates\cxx\Debug\3s543p6i\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-worklets\android\build\intermediates\cxx\Debug\3s543p6i\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-worklets:buildCMakeDebug[armeabi-v7a][worklets]
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.armeabi-v7a\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-worklets\android\build\intermediates\cxx\Debug\3s543p6i\obj\armeabi-v7a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.armeabi-v7a\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-worklets\android\build\intermediates\cxx\Debug\3s543p6i\obj\armeabi-v7a\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-worklets:buildCMakeDebug[x86][worklets]
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-worklets\android\build\intermediates\cxx\Debug\3s543p6i\obj\x86\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-worklets\android\build\intermediates\cxx\Debug\3s543p6i\obj\x86\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-worklets:buildCMakeDebug[x86_64][worklets]
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-worklets\android\build\intermediates\cxx\Debug\3s543p6i\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-worklets\android\build\intermediates\cxx\Debug\3s543p6i\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-worklets:externalNativeBuildDebug
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.armeabi-v7a\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-worklets\android\build\intermediates\cmake\debug\obj\armeabi-v7a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.armeabi-v7a\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-worklets\android\build\intermediates\cmake\debug\obj\armeabi-v7a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-worklets\android\build\intermediates\cmake\debug\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-worklets\android\build\intermediates\cmake\debug\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-worklets\android\build\intermediates\cmake\debug\obj\x86\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-worklets\android\build\intermediates\cmake\debug\obj\x86\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-worklets\android\build\intermediates\cmake\debug\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-worklets\android\build\intermediates\cmake\debug\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-reanimated:buildCMakeDebug[arm64-v8a][reanimated]
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-reanimated\android\build\intermediates\cxx\Debug\4i1o6g2b\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-reanimated\android\build\intermediates\cxx\Debug\4i1o6g2b\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-reanimated:buildCMakeDebug[armeabi-v7a][reanimated]
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.armeabi-v7a\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-reanimated\android\build\intermediates\cxx\Debug\4i1o6g2b\obj\armeabi-v7a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.armeabi-v7a\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-reanimated\android\build\intermediates\cxx\Debug\4i1o6g2b\obj\armeabi-v7a\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-reanimated:buildCMakeDebug[x86][reanimated]
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-reanimated\android\build\intermediates\cxx\Debug\4i1o6g2b\obj\x86\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-reanimated\android\build\intermediates\cxx\Debug\4i1o6g2b\obj\x86\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-reanimated:buildCMakeDebug[x86_64][reanimated]
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-reanimated\android\build\intermediates\cxx\Debug\4i1o6g2b\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-reanimated\android\build\intermediates\cxx\Debug\4i1o6g2b\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-reanimated:externalNativeBuildDebug
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.armeabi-v7a\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-reanimated\android\build\intermediates\cmake\debug\obj\armeabi-v7a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.armeabi-v7a\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-reanimated\android\build\intermediates\cmake\debug\obj\armeabi-v7a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-reanimated\android\build\intermediates\cmake\debug\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-reanimated\android\build\intermediates\cmake\debug\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-reanimated\android\build\intermediates\cmake\debug\obj\x86\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-reanimated\android\build\intermediates\cmake\debug\obj\x86\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-reanimated\android\build\intermediates\cmake\debug\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-reanimated\android\build\intermediates\cmake\debug\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :app:buildCMakeDebug[arm64-v8a]
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'E:\FYP\HouseOfTutor\android\app\build\intermediates\cxx\Debug\1w2t3q3n\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'E:\FYP\HouseOfTutor\android\app\build\intermediates\cxx\Debug\1w2t3q3n\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :app:buildCMakeDebug[armeabi-v7a]
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.armeabi-v7a\libreactnative.so' to 'E:\FYP\HouseOfTutor\android\app\build\intermediates\cxx\Debug\1w2t3q3n\obj\armeabi-v7a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.armeabi-v7a\libreactnative.so' to 'E:\FYP\HouseOfTutor\android\app\build\intermediates\cxx\Debug\1w2t3q3n\obj\armeabi-v7a\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :app:buildCMakeDebug[x86]
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86\libreactnative.so' to 'E:\FYP\HouseOfTutor\android\app\build\intermediates\cxx\Debug\1w2t3q3n\obj\x86\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86\libreactnative.so' to 'E:\FYP\HouseOfTutor\android\app\build\intermediates\cxx\Debug\1w2t3q3n\obj\x86\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :app:buildCMakeDebug[x86_64]
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'E:\FYP\HouseOfTutor\android\app\build\intermediates\cxx\Debug\1w2t3q3n\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'E:\FYP\HouseOfTutor\android\app\build\intermediates\cxx\Debug\1w2t3q3n\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-gesture-handler:buildCMakeDebug[arm64-v8a]
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-gesture-handler\android\build\intermediates\cxx\Debug\6g4i4n3b\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-gesture-handler\android\build\intermediates\cxx\Debug\6g4i4n3b\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-gesture-handler:buildCMakeDebug[armeabi-v7a]
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.armeabi-v7a\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-gesture-handler\android\build\intermediates\cxx\Debug\6g4i4n3b\obj\armeabi-v7a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.armeabi-v7a\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-gesture-handler\android\build\intermediates\cxx\Debug\6g4i4n3b\obj\armeabi-v7a\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-gesture-handler:buildCMakeDebug[x86]
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-gesture-handler\android\build\intermediates\cxx\Debug\6g4i4n3b\obj\x86\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-gesture-handler\android\build\intermediates\cxx\Debug\6g4i4n3b\obj\x86\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-gesture-handler:buildCMakeDebug[x86_64]
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-gesture-handler\android\build\intermediates\cxx\Debug\6g4i4n3b\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-gesture-handler\android\build\intermediates\cxx\Debug\6g4i4n3b\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+
+
+> Task :react-native-screens:buildCMakeDebug[arm64-v8a]
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-screens\android\build\intermediates\cxx\Debug\6i6u4d4e\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-screens\android\build\intermediates\cxx\Debug\6i6u4d4e\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-screens:buildCMakeDebug[armeabi-v7a]
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.armeabi-v7a\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-screens\android\build\intermediates\cxx\Debug\6i6u4d4e\obj\armeabi-v7a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.armeabi-v7a\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-screens\android\build\intermediates\cxx\Debug\6i6u4d4e\obj\armeabi-v7a\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-screens:buildCMakeDebug[x86]
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-screens\android\build\intermediates\cxx\Debug\6i6u4d4e\obj\x86\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-screens\android\build\intermediates\cxx\Debug\6i6u4d4e\obj\x86\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-screens:buildCMakeDebug[x86_64]
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-screens\android\build\intermediates\cxx\Debug\6i6u4d4e\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\hp\.gradle\caches\9.3.1\transforms\427eee61930a909b20cb384104452e26\workspace\transformed\react-android-0.85.0-debug\prefab\modules\reactnative\libs\android.x86_64\libreactnative.so' to 'E:\FYP\HouseOfTutor\node_modules\react-native-screens\android\build\intermediates\cxx\Debug\6i6u4d4e\obj\x86_64\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :app:installDebug
+Installing APK 'app-debug.apk' on 'Pixel_8(AVD) - 16' for :app:debug
+Installed on 1 device.
+
+BUILD SUCCESSFUL in 1h 6m 33s
+257 actionable tasks: 247 executed, 10 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.3.1/userguide/configuration_cache_enabling.html     
+info Connecting to the development server...
+8081
+info Starting the app on "emulator-5554"...
+Starting: Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] cmp=com.houseoftutor/.MainActivity }
+
+E:\FYP\HouseOfTutor>
+
+
+
+
+
+
+
+<============-> 98% EXECUTING [1h 5m 22s]
+> IDLE
+> :app:mergeDebugNativeLibs
+> IDLE
+> IDLE
+
+
