@@ -48,13 +48,14 @@ const TutorStudentRequest = ({ navigation }) => {
 
       const data = text ? JSON.parse(text) : [];
 
-      if (response.ok) {
-        setRequests(data);
+      if (response.ok && data.success) {
+        setRequests(data.data || []);
       } else {
         Alert.alert(
           "Error",
           data.message || "Failed to load requests"
         );
+        setRequests([]);
       }
 
     } catch (error) {
@@ -178,10 +179,29 @@ const TutorStudentRequest = ({ navigation }) => {
       <View style={styles.divider} />
 
       <Text style={styles.details}>
-        📅{" "}
+        📩 Request Date:{" "}
         {item.request_date
           ? item.request_date.split("T")[0]
-          : ""}
+          : "N/A"}
+      </Text>
+
+      <Text style={styles.details}>
+        📅 Class Date:{" "}
+        {item.class_date
+          ? item.class_date.split("T")[0]
+          : "Not Selected"}
+      </Text>
+
+      <Text style={styles.details}>
+        🗓️ Day: {item.day || "N/A"}
+      </Text>
+
+      <Text style={styles.details}>
+        🕒 Time: {item.time || "N/A"}
+      </Text>
+
+      <Text style={styles.details}>
+        📌 Request Type: {item.request_type || "Normal"}
       </Text>
 
       {/* See Profile */}
@@ -455,7 +475,8 @@ const styles = StyleSheet.create({
   details: {
     fontSize: 13,
     color: "#444",
-    marginBottom: 8,
+    marginBottom: 5,
+    lineHeight: 20,
   },
 
   profileBtn: {

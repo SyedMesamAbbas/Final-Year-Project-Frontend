@@ -24,74 +24,135 @@ const TutorTodayClasses = ({ navigation }) => {
     fetchTodayClasses();
   }, []);
 
+  // const fetchTodayClasses = async () => {
+  //   try {
+  //     const token = await AsyncStorage.getItem("token");
+
+  //     if (!token) {
+  //       Alert.alert("Error", "User not logged in");
+  //       return;
+  //     }
+
+  //     const response = await fetch(`${BASE_URL}/Tutor/today-classes`, {
+  //       method: "GET",
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     });
+
+  //     const text = await response.text();
+  //     console.log("TODAY CLASSES RESPONSE:", text);
+
+  //     let data = [];
+  //     try {
+  //       data = text ? JSON.parse(text) : [];
+  //     } catch {}
+
+  //     if (response.ok) {
+  //       setClassData(Array.isArray(data) ? data : []);
+  //     } else {
+  //       Alert.alert("Error", data.message || "Failed to load classes");
+  //     }
+
+  //   } catch (error) {
+  //     console.log("Fetch Error:", error);
+  //     Alert.alert("Error", error.message);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const fetchTodayClasses = async () => {
-    try {
-      const token = await AsyncStorage.getItem("token");
+  try {
+    const token = await AsyncStorage.getItem("token");
 
-      if (!token) {
-        Alert.alert("Error", "User not logged in");
-        return;
-      }
+    if (!token) {
+      Alert.alert("Error", "User not logged in");
+      return;
+    }
 
-      const response = await fetch(`${BASE_URL}/Tutor/today-classes`, {
+    const response = await fetch(
+      `${BASE_URL}/Tutor/today-classes`,
+      {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-      });
-
-      const text = await response.text();
-      console.log("TODAY CLASSES RESPONSE:", text);
-
-      let data = [];
-      try {
-        data = text ? JSON.parse(text) : [];
-      } catch {}
-
-      if (response.ok) {
-        setClassData(Array.isArray(data) ? data : []);
-      } else {
-        Alert.alert("Error", data.message || "Failed to load classes");
       }
+    );
 
-    } catch (error) {
-      console.log("Fetch Error:", error);
-      Alert.alert("Error", error.message);
-    } finally {
-      setLoading(false);
+    const result = await response.json();
+
+    console.log("TODAY CLASSES:", result);
+
+    if (response.ok && result.success) {
+      setClassData(result.data || []);
+    } else {
+      Alert.alert(
+        "Error",
+        result.message || "Failed to load classes"
+      );
     }
-  };
+  } catch (error) {
+    console.log("Fetch Error:", error);
+    Alert.alert("Error", error.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const renderItem = ({ item }) => (
-    <View style={styles.card}>
+  <View style={styles.card}>
+    <Text style={styles.time}>
+      ⏰ {item.time || "N/A"}
+    </Text>
 
-      <Text style={styles.time}>
-        {item.time || "N/A"}
-      </Text>
+    <Text style={styles.text}>
+      👤 Student: {item.student_name}
+    </Text>
 
-      <Text style={styles.text}>👤 {item.student_name}</Text>
-      <Text style={styles.text}>📘 {item.course_name}</Text>
+    <Text style={styles.text}>
+      📘 Course: {item.course_name}
+    </Text>
 
-      <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.primaryBtn}>
-          <Text style={styles.primaryText}>Complete</Text>
-        </TouchableOpacity>
+    <Text style={styles.text}>
+      📅 Date: {item.class_date}
+    </Text>
 
-        <TouchableOpacity style={styles.secondaryBtn}>
-          <Text style={styles.secondaryText}>Pre-Schedule</Text>
-        </TouchableOpacity>
+    <Text style={styles.text}>
+      🗓️ Day: {item.day}
+    </Text>
 
-        <TouchableOpacity style={styles.secondaryBtn}>
-          <Text style={styles.secondaryText}>Re-Schedule</Text>
-        </TouchableOpacity>
+    <Text style={styles.text}>
+      📌 Type: {item.request_type}
+    </Text>
 
-        <TouchableOpacity style={styles.cancelBtn}>
-          <Text style={styles.cancelText}>Cancel</Text>
-        </TouchableOpacity>
-      </View>
+    <View style={styles.buttonRow}>
+      <TouchableOpacity style={styles.primaryBtn}>
+        <Text style={styles.primaryText}>Complete</Text>
+      </TouchableOpacity>
 
+      <TouchableOpacity style={styles.secondaryBtn}>
+        <Text style={styles.secondaryText}>
+          Pre-Schedule
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.secondaryBtn}>
+        <Text style={styles.secondaryText}>
+          Re-Schedule
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.cancelBtn}>
+        <Text style={styles.cancelText}>
+          Cancel
+        </Text>
+      </TouchableOpacity>
     </View>
-  );
+  </View>
+);
 
   return (
     <SafeAreaView style={styles.container}>

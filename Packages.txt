@@ -1,3 +1,7 @@
+cls -------> to Clear command prompt 
+
+
+
 npm install @react-navigation/native
 npm install @react-navigation/native-stack
 npm install react-native-screens react-native-safe-area-context
@@ -10,7 +14,9 @@ npm install @react-navigation/drawer
 
 
 
+On top there is header which contain logo image on center and on left side there is back arrow which navigate back
 
+return me fully fixed code for it ready to copy paste in one file
 
 --------------------------------------------------BY SIR--------------------------------------------------
 ------------ Drop Down Element ---------------
