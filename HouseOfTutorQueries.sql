@@ -42,7 +42,9 @@ CREATE TABLE Student (
 
 CREATE TABLE Course (
     course_id INT PRIMARY KEY IDENTITY(1,1),
-    course_title VARCHAR(100)
+    course_title VARCHAR(100),
+    admin_set_min_hourly_rate DECIMAL(10,2),
+    admin_set_max_hourly_rate DECIMAL(10,2)
 );
 
 CREATE TABLE Schedule (
@@ -211,6 +213,11 @@ ADD
 admin_set_min_hourly_rate DECIMAL(10,2),
 admin_set_max_hourly_rate DECIMAL(10,2);
 
+ALTER TABLE Course
+ADD
+admin_set_min_hourly_rate DECIMAL(10,2),
+admin_set_max_hourly_rate DECIMAL(10,2);
+
 Alter table Student Add status VARCHAR(20);
 
 
@@ -269,7 +276,7 @@ Delete from Feedback where student_id!=2
 Delete from Users where user_id=1012
 Delete from Student where user_id=1012
 Delete Tutor_Course
-
+Delete from Course where course_id>12
 
 
 
