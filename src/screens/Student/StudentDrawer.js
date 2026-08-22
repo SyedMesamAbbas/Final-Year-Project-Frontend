@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   Image,
   StatusBar,
+  Platform,
 } from "react-native";
 
 import Icon from "react-native-vector-icons/MaterialIcons";
@@ -17,34 +18,36 @@ const MENU_ITEMS = [
     label: "My Profile",
     icon: "person-outline",
     route: "StudentProfile",
-    description: "View and edit your details",
+    description: "View and edit your personal details",
   },
   {
     label: "My Tutor",
     icon: "school",
     route: "MyTutor",
-    description: "View your assigned tutor",
+    description: "View your assigned tutor profile",
   },
   {
     label: "Session History",
     icon: "history",
     route: "StudentHistory",
-    description: "Past sessions and records",
+    description: "Past learning sessions and records",
   },
   {
     label: "Today Classes",
-    icon: "book",
+    icon: "event-note",
     route: "TodayClasses",
-    description: "Manage your Classes",
+    description: "Manage your daily class schedule",
   },
 ];
 
 const StudentDrawer = ({ navigation }) => {
-  return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
+  const primaryColor = colors?.primary || "#4F46E5";
 
-      {/* HEADER */}
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: primaryColor }]}>
+      <StatusBar barStyle="light-content" backgroundColor={primaryColor} />
+
+      {/* BRANDING HEADER */}
       <View style={styles.header}>
         <View style={styles.headerBrand}>
           <View style={styles.logoWrapper}>
@@ -53,7 +56,7 @@ const StudentDrawer = ({ navigation }) => {
               style={styles.logoImg}
             />
           </View>
-          <View>
+          <View style={styles.brandTitleGroup}>
             <Text style={styles.logoText}>House of Tutor</Text>
             <Text style={styles.logoTagline}>Your learning companion</Text>
           </View>
@@ -62,55 +65,63 @@ const StudentDrawer = ({ navigation }) => {
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.closeBtn}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          activeOpacity={0.7}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
-          <Icon name="close" size={22} color="#fff" />
+          <Icon name="close" size={20} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
 
-      {/* DIVIDER */}
-      <View style={styles.divider} />
+      {/* DRAWER BODY / SHEET */}
+      <View style={styles.drawerSheet}>
+        <Text style={styles.sectionLabel}>NAVIGATION</Text>
 
-      {/* SECTION LABEL */}
-      <Text style={styles.sectionLabel}>NAVIGATION</Text>
+        {/* MENU LIST */}
+        <View style={styles.menuList}>
+          {MENU_ITEMS.map((item) => (
+            <TouchableOpacity
+              key={item.route}
+              style={styles.menuItem}
+              onPress={() => navigation.navigate(item.route)}
+              activeOpacity={0.7}
+            >
+              <View
+                style={[
+                  styles.menuIconWrapper,
+                  { backgroundColor: `${primaryColor}12` },
+                ]}
+              >
+                <Icon name={item.icon} size={22} color={primaryColor} />
+              </View>
 
-      {/* MENU ITEMS */}
-      <View style={styles.menuList}>
-        {MENU_ITEMS.map((item) => (
+              <View style={styles.menuTextGroup}>
+                <Text style={styles.menuLabel}>{item.label}</Text>
+                <Text style={styles.menuDesc}>{item.description}</Text>
+              </View>
+
+              <Icon name="chevron-right" size={22} color="#CBD5E1" />
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <View style={{ flex: 1 }} />
+
+        {/* FOOTER / LOGOUT */}
+        <View style={styles.footer}>
           <TouchableOpacity
-            key={item.route}
-            style={styles.menuItem}
-            onPress={() => navigation.navigate(item.route)}
-            activeOpacity={0.85}
+            style={styles.logoutBtn}
+            onPress={() => navigation.navigate("AuthStack")}
+            activeOpacity={0.7}
           >
-            <View style={styles.menuIconWrapper}>
-              <Icon name={item.icon} size={20} color={colors.primary} />
+            <View style={styles.logoutIconWrapper}>
+              <Icon name="logout" size={20} color="#EF4444" />
             </View>
             <View style={styles.menuTextGroup}>
-              <Text style={styles.menuLabel}>{item.label}</Text>
-              <Text style={styles.menuDesc}>{item.description}</Text>
+              <Text style={styles.logoutText}>Log Out</Text>
+              <Text style={styles.logoutSubtext}>Sign out of your account</Text>
             </View>
-            <Icon name="chevron-right" size={20} color="#ccc" />
           </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* SPACER */}
-      <View style={{ flex: 1 }} />
-
-      {/* BOTTOM — LOGOUT */}
-      <View style={styles.footer}>
-        <View style={styles.divider} />
-        <TouchableOpacity
-          style={styles.logoutBtn}
-          onPress={() => navigation.navigate("AuthStack")}
-          activeOpacity={0.85}
-        >
-          <View style={styles.logoutIconWrapper}>
-            <Icon name="logout" size={20} color="#e53935" />
-          </View>
-          <Text style={styles.logoutText}>Log Out</Text>
-        </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -121,7 +132,6 @@ export default StudentDrawer;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.primary,
   },
 
   // ── HEADER ─────────────────────────────
@@ -129,101 +139,110 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: 50,
+    paddingHorizontal: 24,
+    paddingTop: Platform.OS === "android" ? 36 : 16,
     paddingBottom: 24,
   },
 
   headerBrand: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
   },
 
   logoWrapper: {
-    width: 46,
-    height: 46,
-    borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.18)",
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.25)",
   },
 
   logoImg: {
-    width: 28,
-    height: 28,
+    width: 30,
+    height: 30,
     resizeMode: "contain",
   },
 
+  brandTitleGroup: {
+    marginLeft: 14,
+  },
+
   logoText: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: "#fff",
-    letterSpacing: 0.3,
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#FFFFFF",
+    letterSpacing: -0.3,
   },
 
   logoTagline: {
-    fontSize: 11,
-    color: "rgba(255,255,255,0.6)",
-    marginTop: 1,
-    letterSpacing: 0.2,
+    fontSize: 12,
+    color: "rgba(255, 255, 255, 0.75)",
+    marginTop: 2,
+    fontWeight: "500",
   },
 
   closeBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.18)",
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.25)",
   },
 
-  // ── DIVIDER ────────────────────────────
-  divider: {
-    height: 1,
-    backgroundColor: "rgba(255,255,255,0.12)",
-    marginHorizontal: 20,
+  // ── DRAWER SHEET ───────────────────────
+  drawerSheet: {
+    flex: 1,
+    backgroundColor: "#F8FAFC",
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: Platform.OS === "ios" ? 20 : 28,
   },
 
-  // ── SECTION LABEL ──────────────────────
   sectionLabel: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: "rgba(255,255,255,0.45)",
-    letterSpacing: 1.4,
-    marginHorizontal: 20,
-    marginTop: 22,
-    marginBottom: 10,
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#94A3B8",
+    letterSpacing: 1.2,
+    marginLeft: 6,
+    marginBottom: 14,
   },
 
-  // ── MENU ───────────────────────────────
+  // ── MENU ITEMS ─────────────────────────
   menuList: {
-    paddingHorizontal: 16,
-    gap: 8,
+    gap: 12,
   },
 
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 14,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
     paddingVertical: 14,
-    paddingHorizontal: 14,
-    gap: 12,
-    shadowColor: "#000",
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+    shadowColor: "#0F172A",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
     elevation: 2,
   },
 
   menuIconWrapper: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
-    backgroundColor: `${colors.primary}15`,
+    width: 42,
+    height: 42,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
+    marginRight: 14,
   },
 
   menuTextGroup: {
@@ -232,54 +251,366 @@ const styles = StyleSheet.create({
 
   menuLabel: {
     fontSize: 15,
-    fontWeight: "600",
-    color: "#1a1a1a",
-    letterSpacing: 0.1,
+    fontWeight: "700",
+    color: "#0F172A",
+    letterSpacing: -0.2,
   },
 
   menuDesc: {
     fontSize: 12,
-    color: "#999",
+    color: "#64748B",
     marginTop: 2,
+    fontWeight: "400",
   },
 
-  // ── FOOTER ─────────────────────────────
+  // ── FOOTER & LOGOUT ────────────────────
   footer: {
-    paddingBottom: 30,
-    gap: 16,
+    paddingTop: 12,
   },
 
   logoutBtn: {
     flexDirection: "row",
     alignItems: "center",
-    marginHorizontal: 16,
-    backgroundColor: "#fff",
-    borderRadius: 14,
+    backgroundColor: "#FEF2F2",
+    borderRadius: 16,
     paddingVertical: 14,
-    paddingHorizontal: 14,
-    gap: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: "#FEE2E2",
   },
 
   logoutIconWrapper: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
-    backgroundColor: "#fdecea",
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: "#FEE2E2",
     alignItems: "center",
     justifyContent: "center",
+    marginRight: 14,
   },
 
   logoutText: {
     fontSize: 15,
-    fontWeight: "600",
-    color: "#e53935",
+    fontWeight: "700",
+    color: "#EF4444",
+  },
+
+  logoutSubtext: {
+    fontSize: 12,
+    color: "#F87171",
+    marginTop: 2,
   },
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import React from "react";
+// import {
+//   View,
+//   Text,
+//   StyleSheet,
+//   TouchableOpacity,
+//   SafeAreaView,
+//   Image,
+//   StatusBar,
+// } from "react-native";
+
+// import Icon from "react-native-vector-icons/MaterialIcons";
+// import colors from "../utils/colors";
+
+// const MENU_ITEMS = [
+//   {
+//     label: "My Profile",
+//     icon: "person-outline",
+//     route: "StudentProfile",
+//     description: "View and edit your details",
+//   },
+//   {
+//     label: "My Tutor",
+//     icon: "school",
+//     route: "MyTutor",
+//     description: "View your assigned tutor",
+//   },
+//   {
+//     label: "Session History",
+//     icon: "history",
+//     route: "StudentHistory",
+//     description: "Past sessions and records",
+//   },
+//   {
+//     label: "Today Classes",
+//     icon: "book",
+//     route: "TodayClasses",
+//     description: "Manage your Classes",
+//   },
+// ];
+
+// const StudentDrawer = ({ navigation }) => {
+//   return (
+//     <SafeAreaView style={styles.container}>
+//       <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
+
+//       {/* HEADER */}
+//       <View style={styles.header}>
+//         <View style={styles.headerBrand}>
+//           <View style={styles.logoWrapper}>
+//             <Image
+//               source={require("../../../assets/images/logo.png")}
+//               style={styles.logoImg}
+//             />
+//           </View>
+//           <View>
+//             <Text style={styles.logoText}>House of Tutor</Text>
+//             <Text style={styles.logoTagline}>Your learning companion</Text>
+//           </View>
+//         </View>
+
+//         <TouchableOpacity
+//           onPress={() => navigation.goBack()}
+//           style={styles.closeBtn}
+//           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+//         >
+//           <Icon name="close" size={22} color="#fff" />
+//         </TouchableOpacity>
+//       </View>
+
+//       {/* DIVIDER */}
+//       <View style={styles.divider} />
+
+//       {/* SECTION LABEL */}
+//       <Text style={styles.sectionLabel}>NAVIGATION</Text>
+
+//       {/* MENU ITEMS */}
+//       <View style={styles.menuList}>
+//         {MENU_ITEMS.map((item) => (
+//           <TouchableOpacity
+//             key={item.route}
+//             style={styles.menuItem}
+//             onPress={() => navigation.navigate(item.route)}
+//             activeOpacity={0.85}
+//           >
+//             <View style={styles.menuIconWrapper}>
+//               <Icon name={item.icon} size={20} color={colors.primary} />
+//             </View>
+//             <View style={styles.menuTextGroup}>
+//               <Text style={styles.menuLabel}>{item.label}</Text>
+//               <Text style={styles.menuDesc}>{item.description}</Text>
+//             </View>
+//             <Icon name="chevron-right" size={20} color="#ccc" />
+//           </TouchableOpacity>
+//         ))}
+//       </View>
+
+//       {/* SPACER */}
+//       <View style={{ flex: 1 }} />
+
+//       {/* BOTTOM — LOGOUT */}
+//       <View style={styles.footer}>
+//         <View style={styles.divider} />
+//         <TouchableOpacity
+//           style={styles.logoutBtn}
+//           onPress={() => navigation.navigate("AuthStack")}
+//           activeOpacity={0.85}
+//         >
+//           <View style={styles.logoutIconWrapper}>
+//             <Icon name="logout" size={20} color="#e53935" />
+//           </View>
+//           <Text style={styles.logoutText}>Log Out</Text>
+//         </TouchableOpacity>
+//       </View>
+//     </SafeAreaView>
+//   );
+// };
+
+// export default StudentDrawer;
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: colors.primary,
+//   },
+
+//   // ── HEADER ─────────────────────────────
+//   header: {
+//     flexDirection: "row",
+//     justifyContent: "space-between",
+//     alignItems: "center",
+//     paddingHorizontal: 20,
+//     paddingTop: 50,
+//     paddingBottom: 24,
+//   },
+
+//   headerBrand: {
+//     flexDirection: "row",
+//     alignItems: "center",
+//     gap: 12,
+//   },
+
+//   logoWrapper: {
+//     width: 46,
+//     height: 46,
+//     borderRadius: 12,
+//     backgroundColor: "rgba(255,255,255,0.15)",
+//     alignItems: "center",
+//     justifyContent: "center",
+//   },
+
+//   logoImg: {
+//     width: 28,
+//     height: 28,
+//     resizeMode: "contain",
+//   },
+
+//   logoText: {
+//     fontSize: 17,
+//     fontWeight: "700",
+//     color: "#fff",
+//     letterSpacing: 0.3,
+//   },
+
+//   logoTagline: {
+//     fontSize: 11,
+//     color: "rgba(255,255,255,0.6)",
+//     marginTop: 1,
+//     letterSpacing: 0.2,
+//   },
+
+//   closeBtn: {
+//     width: 36,
+//     height: 36,
+//     borderRadius: 10,
+//     backgroundColor: "rgba(255,255,255,0.15)",
+//     alignItems: "center",
+//     justifyContent: "center",
+//   },
+
+//   // ── DIVIDER ────────────────────────────
+//   divider: {
+//     height: 1,
+//     backgroundColor: "rgba(255,255,255,0.12)",
+//     marginHorizontal: 20,
+//   },
+
+//   // ── SECTION LABEL ──────────────────────
+//   sectionLabel: {
+//     fontSize: 10,
+//     fontWeight: "700",
+//     color: "rgba(255,255,255,0.45)",
+//     letterSpacing: 1.4,
+//     marginHorizontal: 20,
+//     marginTop: 22,
+//     marginBottom: 10,
+//   },
+
+//   // ── MENU ───────────────────────────────
+//   menuList: {
+//     paddingHorizontal: 16,
+//     gap: 8,
+//   },
+
+//   menuItem: {
+//     flexDirection: "row",
+//     alignItems: "center",
+//     backgroundColor: "#fff",
+//     borderRadius: 14,
+//     paddingVertical: 14,
+//     paddingHorizontal: 14,
+//     gap: 12,
+//     shadowColor: "#000",
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: 0.06,
+//     shadowRadius: 6,
+//     elevation: 2,
+//   },
+
+//   menuIconWrapper: {
+//     width: 38,
+//     height: 38,
+//     borderRadius: 10,
+//     backgroundColor: `${colors.primary}15`,
+//     alignItems: "center",
+//     justifyContent: "center",
+//   },
+
+//   menuTextGroup: {
+//     flex: 1,
+//   },
+
+//   menuLabel: {
+//     fontSize: 15,
+//     fontWeight: "600",
+//     color: "#1a1a1a",
+//     letterSpacing: 0.1,
+//   },
+
+//   menuDesc: {
+//     fontSize: 12,
+//     color: "#999",
+//     marginTop: 2,
+//   },
+
+//   // ── FOOTER ─────────────────────────────
+//   footer: {
+//     paddingBottom: 30,
+//     gap: 16,
+//   },
+
+//   logoutBtn: {
+//     flexDirection: "row",
+//     alignItems: "center",
+//     marginHorizontal: 16,
+//     backgroundColor: "#fff",
+//     borderRadius: 14,
+//     paddingVertical: 14,
+//     paddingHorizontal: 14,
+//     gap: 12,
+//     shadowColor: "#000",
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: 0.06,
+//     shadowRadius: 6,
+//     elevation: 2,
+//   },
+
+//   logoutIconWrapper: {
+//     width: 38,
+//     height: 38,
+//     borderRadius: 10,
+//     backgroundColor: "#fdecea",
+//     alignItems: "center",
+//     justifyContent: "center",
+//   },
+
+//   logoutText: {
+//     fontSize: 15,
+//     fontWeight: "600",
+//     color: "#e53935",
+//   },
+// });
 
 
 
