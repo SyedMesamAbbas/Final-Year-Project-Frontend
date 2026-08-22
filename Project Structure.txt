@@ -1,0 +1,79 @@
+HouseOfTutor/
+├── assets/
+│   ├── images/
+│   └── fonts/
+├── src/
+│   ├── components/
+│   │   ├──AppButton.js
+│   │   ├── InputField.js
+│   ├── config/
+│   │   ├── api.js  (BASE_URL is used in all files)
+│   ├── navigation/
+│   │   ├── AdminStack.js
+│   │   ├── AuthStack.js
+│   │   ├── index.js
+│   │   ├── ParentStack.js
+│   │   ├── StudentStack.js
+│   │   └── TutorStack.js
+│   ├── screens/
+│   │   ├── Auth/
+│   │   │   ├── LoginScreen.js
+│   │   │   ├── MapScreen.js
+│   │   │   ├── RoleScreen.js
+│   │   │   ├── StudentSignUpScreen.js
+│   │   │   └── TutorSignUpScreen.js
+│   │   ├── Admin/
+│   │   │   ├── AdminApprovedTutor.js
+│   │   │   ├── AdminBlockedStudent.js
+│   │   │   ├── AdminBlockedListScreen.js (Blocked Tutor Shown)
+│   │   │   ├── AdminClassesScreen.js
+│   │   │   ├── AdminDrawerScreen.js
+│   │   │   ├── AdminFeedbackScreen.js
+│   │   │   ├── AdminHome.js
+│   │   │   ├── AdminProfileScreen.js
+│   │   │   ├── AdminStudentScreen.js
+│   │   │   ├── AdminSubjectScreen.js
+│   │   │   ├── AdminTutorDetailScreen.js
+│   │   │   ├── AdminTutorScreen.js (Approved Tutor Shown)
+│   │   │   └── TutorCourses.js
+│   │   ├── Tutor/
+│   │   │   ├── History.js
+│   │   │   ├── MarkCourseDoneScreen.js
+│   │   │   ├── MyStudentScreen.js
+│   │   │   ├── Notification.js
+│   │   │   ├── StudentProfile.js
+│   │   │   ├── TutorAddSubject.js
+│   │   │   ├── TutorAllClasses.js
+│   │   │   ├── TutorCancelClasses.js
+│   │   │   ├── TutorDashboard.js
+│   │   │   ├── TutorDrawer.js
+│   │   │   ├── TutorHome.js
+│   │   │   ├── TutorPaymentScreen.js
+│   │   │   ├── TutorProfile.js
+│   │   │   ├── TutorStudentRequest.js
+│   │   │   └── TutorTodayClasses.js
+│   │   ├── Student/
+│   │   │   ├── MyTutor.js
+│   │   │   ├── Notification.js
+│   │   │   ├── StudentAddCourses.js
+│   │   │   ├── StudentAllClasses.js
+│   │   │   ├── StudentCourses.js
+│   │   │   ├── StudentDrawer.js
+│   │   │   ├── StudentFindTutor.js
+│   │   │   ├── StudentHistory.js
+│   │   │   ├── StudentHome.js
+│   │   │   ├── StudentProfile.js
+│   │   │   └── TodayClasses.js
+│   │   └── Parent/
+│   │   │   ├── Dashboard.js
+│   │   │   ├── ParentChildClasses.js
+│   │   │   ├── ParentChildCourses.js
+│   │   │   ├── ParentChildDetail.js
+│   │   │   ├── ParentChildFee.js
+│   │   │   ├── ParentChildProfile.js
+│   │   │   ├── ParentChildSchedule.js
+│   │   │   └── ParentChildTutor.js
+│   ├── services/
+│   └── utils/
+│   │   └── colors.js
+└── App.tsx
