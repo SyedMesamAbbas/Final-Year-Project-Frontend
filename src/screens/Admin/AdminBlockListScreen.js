@@ -45,13 +45,13 @@ const Theme = {
   accent: "#6366F1",
 };
 
-const AdminBlockedStudents = () => {
+const AdminBlockedTutors = () => {
   const navigation = useNavigation();
 
   //==================================================
   // States
   //==================================================
-  const [students, setStudents] = useState([]);
+  const [tutors, setTutors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [restoringId, setRestoringId] = useState(null);
@@ -77,9 +77,9 @@ const AdminBlockedStudents = () => {
   };
 
   //==================================================
-  // Fetch Blocked Students
+  // Fetch Blocked Tutors
   //==================================================
-  const loadBlockedStudents = async () => {
+  const loadBlockedTutors = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
 
@@ -91,34 +91,28 @@ const AdminBlockedStudents = () => {
         return;
       }
 
-      const response = await axios.get(
-        `${BASE_URL}/Admin/blocked-students`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axios.get(`${BASE_URL}/Admin/blocked-tutors`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      console.log("Blocked Students Response:", response.data);
+      console.log("Blocked Tutors Response:", response.data);
 
       if (Array.isArray(response.data)) {
-        setStudents(response.data);
+        setTutors(response.data);
       } else {
-        setStudents([]);
+        setTutors([]);
       }
     } catch (error) {
       console.log(
-        "Get Blocked Students Error:",
+        "Get Blocked Tutors Error:",
         error.response?.data || error.message
       );
 
       Alert.alert(
         "Error",
-        getErrorMessage(
-          error,
-          "Unable to load blocked students."
-        )
+        getErrorMessage(error, "Unable to load blocked tutors.")
       );
     } finally {
       setLoading(false);
@@ -130,7 +124,7 @@ const AdminBlockedStudents = () => {
   // Initial Load
   //==================================================
   useEffect(() => {
-    loadBlockedStudents();
+    loadBlockedTutors();
   }, []);
 
   //==================================================
@@ -138,31 +132,35 @@ const AdminBlockedStudents = () => {
   //==================================================
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    loadBlockedStudents();
+    loadBlockedTutors();
   }, []);
 
   //==================================================
-  // Filtered Students List
+  // Filtered Tutors List
   //==================================================
-  const filteredStudents = useMemo(() => {
-    if (!searchQuery.trim()) return students;
+  const filteredTutors = useMemo(() => {
+    if (!searchQuery.trim()) return tutors;
     const query = searchQuery.toLowerCase().trim();
-    return students.filter((item) => {
-      const name = item.fullName ? item.fullName.toLowerCase() : "";
-      const email = item.email ? item.email.toLowerCase() : "";
-      const studentId = item.studentId ? item.studentId.toString().toLowerCase() : "";
-      const phone = item.phone ? item.phone.toLowerCase() : "";
-      const cnic = item.cnic ? item.cnic.toLowerCase() : "";
+    return tutors.filter((item) => {
+      const name = item?.fullName ? item.fullName.toLowerCase() : "";
+      const email = item?.email ? item.email.toLowerCase() : "";
+      const tutorId = item?.tutorId
+        ? item.tutorId.toString().toLowerCase()
+        : item?.studentId
+        ? item.studentId.toString().toLowerCase()
+        : "";
+      const phone = item?.phone ? item.phone.toLowerCase() : "";
+      const cnic = item?.cnic ? item.cnic.toLowerCase() : "";
 
       return (
         name.includes(query) ||
         email.includes(query) ||
-        studentId.includes(query) ||
+        tutorId.includes(query) ||
         phone.includes(query) ||
         cnic.includes(query)
       );
     });
-  }, [students, searchQuery]);
+  }, [tutors, searchQuery]);
 
   //==================================================
   // Helper: Copy to Clipboard
@@ -176,32 +174,41 @@ const AdminBlockedStudents = () => {
   };
 
   //==================================================
-  // Restore Student Confirmation
+  // Restore Tutor Confirmation
   //==================================================
-  const confirmRestore = (student) => {
+  const confirmRestore = (tutor) => {
     Alert.alert(
       "Restore Access",
-      `Are you sure you want to reinstate access privileges for ${student.fullName || "this student"}?`,
+      `Are you sure you want to reinstate access privileges for ${
+        tutor?.fullName || "this tutor"
+      }?`,
       [
         {
           text: "Cancel",
           style: "cancel",
         },
         {
-          text: "Restore Student",
+          text: "Restore Tutor",
           style: "default",
-          onPress: () => restoreStudent(student),
+          onPress: () => restoreTutor(tutor),
         },
       ]
     );
   };
 
   //==================================================
-  // Restore Student
+  // Restore Tutor
   //==================================================
-  const restoreStudent = async (student) => {
+  const restoreTutor = async (tutor) => {
+    const idToRestore = tutor?.tutorId ?? tutor?.studentId ?? tutor?.id;
+
+    if (!idToRestore) {
+      Alert.alert("Error", "Tutor ID is missing. Cannot perform restore.");
+      return;
+    }
+
     try {
-      setRestoringId(student.studentId);
+      setRestoringId(idToRestore);
 
       const token = await AsyncStorage.getItem("token");
 
@@ -214,7 +221,7 @@ const AdminBlockedStudents = () => {
       }
 
       const response = await axios.put(
-        `${BASE_URL}/Admin/restore-student/${student.studentId}`,
+        `${BASE_URL}/Admin/restore-tutors/${idToRestore}`,
         {},
         {
           headers: {
@@ -223,32 +230,30 @@ const AdminBlockedStudents = () => {
         }
       );
 
-      console.log("Restore Student Response:", response.data);
+      console.log("Restore Tutor Response:", response.data);
 
       Alert.alert(
-        "Student Restored",
+        "Tutor Restored",
         response.data?.message ||
-          "Student account has been restored successfully."
+          "Tutor account has been restored successfully."
       );
 
-      // Remove restored student from blocked list
-      setStudents((previousStudents) =>
-        previousStudents.filter(
-          (item) => item.studentId !== student.studentId
-        )
+      // Remove restored tutor from blocked list
+      setTutors((previousTutors) =>
+        previousTutors.filter((item) => {
+          const itemId = item?.tutorId ?? item?.studentId ?? item?.id;
+          return itemId !== idToRestore;
+        })
       );
     } catch (error) {
       console.log(
-        "Restore Student Error:",
+        "Restore Tutor Error:",
         error.response?.data || error.message
       );
 
       Alert.alert(
         "Error",
-        getErrorMessage(
-          error,
-          "Unable to restore student."
-        )
+        getErrorMessage(error, "Unable to restore tutor.")
       );
     } finally {
       setRestoringId(null);
@@ -259,7 +264,7 @@ const AdminBlockedStudents = () => {
   // Helper: Get Initials
   //==================================================
   const getInitials = (name) => {
-    if (!name) return "ST";
+    if (!name) return "TR";
     const parts = name.trim().split(" ");
     if (parts.length >= 2) {
       return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
@@ -268,29 +273,30 @@ const AdminBlockedStudents = () => {
   };
 
   //==================================================
-  // Render Student Card
+  // Render Tutor Card
   //==================================================
-  const renderStudent = ({ item }) => {
-    const isRestoring = restoringId === item.studentId;
-    const initials = getInitials(item.fullName);
+  const renderTutor = ({ item }) => {
+    const tutorId = item?.tutorId ?? item?.studentId ?? item?.id ?? "N/A";
+    const isRestoring = restoringId === tutorId;
+    const initials = getInitials(item?.fullName);
 
     return (
-      <View style={styles.studentCard}>
+      <View style={styles.tutorCard}>
         {/* Card Header */}
-        <View style={styles.studentHeader}>
+        <View style={styles.tutorHeader}>
           <View style={styles.avatarContainer}>
             <Text style={styles.avatarText}>{initials}</Text>
           </View>
 
-          <View style={styles.studentHeaderInfo}>
+          <View style={styles.tutorHeaderInfo}>
             <View style={styles.nameRow}>
-              <Text style={styles.studentName} numberOfLines={1}>
-                {item.fullName || "Unknown Student"}
+              <Text style={styles.tutorName} numberOfLines={1}>
+                {item?.fullName || "Unknown Tutor"}
               </Text>
             </View>
             <View style={styles.idChip}>
               <Icon name="fingerprint" size={12} color={Theme.textMuted} />
-              <Text style={styles.studentIdText}>ID: {item.studentId}</Text>
+              <Text style={styles.tutorIdText}>ID: {tutorId}</Text>
             </View>
           </View>
 
@@ -307,7 +313,7 @@ const AdminBlockedStudents = () => {
           {/* Email Row */}
           <TouchableOpacity
             activeOpacity={0.7}
-            onPress={() => handleCopyText(item.email, "Email")}
+            onPress={() => handleCopyText(item?.email, "Email")}
             style={styles.infoRow}
           >
             <View style={styles.infoIconContainer}>
@@ -316,10 +322,10 @@ const AdminBlockedStudents = () => {
             <View style={styles.infoContent}>
               <Text style={styles.infoLabel}>Email Address</Text>
               <Text style={styles.infoValue} numberOfLines={1}>
-                {item.email || "Not Available"}
+                {item?.email || "Not Available"}
               </Text>
             </View>
-            {item.email && (
+            {item?.email && (
               <Icon name="content-copy" size={14} color={Theme.textMuted} />
             )}
           </TouchableOpacity>
@@ -332,7 +338,7 @@ const AdminBlockedStudents = () => {
             <View style={styles.infoContent}>
               <Text style={styles.infoLabel}>Phone Number</Text>
               <Text style={styles.infoValue}>
-                {item.phone || "Not Available"}
+                {item?.phone || "Not Available"}
               </Text>
             </View>
           </View>
@@ -341,23 +347,23 @@ const AdminBlockedStudents = () => {
           <View style={styles.twoColumnRow}>
             <TouchableOpacity
               activeOpacity={0.7}
-              onPress={() => handleCopyText(item.cnic, "CNIC")}
+              onPress={() => handleCopyText(item?.cnic, "CNIC")}
               style={[styles.infoRow, styles.flexHalf]}
             >
               <View style={styles.infoIconContainer}>
                 <Icon name="badge" size={15} color={Theme.primary} />
               </View>
               <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Student CNIC</Text>
+                <Text style={styles.infoLabel}>Tutor CNIC</Text>
                 <Text style={styles.infoValueCompact} numberOfLines={1}>
-                  {item.cnic || "N/A"}
+                  {item?.cnic || "N/A"}
                 </Text>
               </View>
             </TouchableOpacity>
 
             <TouchableOpacity
               activeOpacity={0.7}
-              onPress={() => handleCopyText(item.fatherCnic, "Father CNIC")}
+              onPress={() => handleCopyText(item?.fatherCnic, "Father CNIC")}
               style={[styles.infoRow, styles.flexHalf]}
             >
               <View style={styles.infoIconContainer}>
@@ -366,7 +372,7 @@ const AdminBlockedStudents = () => {
               <View style={styles.infoContent}>
                 <Text style={styles.infoLabel}>Father CNIC</Text>
                 <Text style={styles.infoValueCompact} numberOfLines={1}>
-                  {item.fatherCnic || "N/A"}
+                  {item?.fatherCnic || "N/A"}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -380,7 +386,7 @@ const AdminBlockedStudents = () => {
             <View style={styles.infoContent}>
               <Text style={styles.infoLabel}>Location / Address</Text>
               <Text style={styles.infoValue} numberOfLines={2}>
-                {item.location || "Not Provided"}
+                {item?.location || "Not Provided"}
               </Text>
             </View>
           </View>
@@ -401,7 +407,7 @@ const AdminBlockedStudents = () => {
           ) : (
             <>
               <Icon name="restore" size={18} color="#FFFFFF" />
-              <Text style={styles.restoreButtonText}>Restore Student</Text>
+              <Text style={styles.restoreButtonText}>Restore Tutor</Text>
             </>
           )}
         </TouchableOpacity>
@@ -443,13 +449,13 @@ const AdminBlockedStudents = () => {
         </TouchableOpacity>
 
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Blocked Students</Text>
+          <Text style={styles.headerTitle}>Blocked Tutors</Text>
           <Text style={styles.headerSubtitle}>Account Access Management</Text>
         </View>
 
         <TouchableOpacity
           style={styles.headerIconButton}
-          onPress={loadBlockedStudents}
+          onPress={loadBlockedTutors}
           accessibilityLabel="Refresh list"
         >
           <Icon name="refresh" size={20} color={Theme.textPrimary} />
@@ -480,25 +486,30 @@ const AdminBlockedStudents = () => {
           <View style={styles.summaryBadge}>
             <Icon name="shield" size={14} color={Theme.danger} />
             <Text style={styles.summaryBadgeText}>
-              {students.length} Total Blocked
+              {tutors.length} Total Blocked
             </Text>
           </View>
           {searchQuery.trim().length > 0 && (
             <Text style={styles.searchResultsCount}>
-              Showing {filteredStudents.length} matches
+              Showing {filteredTutors.length} matches
             </Text>
           )}
         </View>
       </View>
 
-      {/* Student List */}
+      {/* Tutor List */}
       <FlatList
-        data={filteredStudents}
-        keyExtractor={(item) => item.studentId.toString()}
-        renderItem={renderStudent}
+        data={filteredTutors}
+        keyExtractor={(item, index) =>
+          item?.tutorId?.toString() ??
+          item?.studentId?.toString() ??
+          item?.id?.toString() ??
+          `tutor-${index}`
+        }
+        renderItem={renderTutor}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={
-          filteredStudents.length === 0
+          filteredTutors.length === 0
             ? styles.emptyList
             : styles.listContent
         }
@@ -521,13 +532,13 @@ const AdminBlockedStudents = () => {
             </View>
 
             <Text style={styles.emptyTitle}>
-              {searchQuery ? "No Matching Results" : "No Blocked Students"}
+              {searchQuery ? "No Matching Results" : "No Blocked Tutors"}
             </Text>
 
             <Text style={styles.emptyText}>
               {searchQuery
                 ? `No blocked accounts matched "${searchQuery}". Try searching with a different term.`
-                : "All student accounts are currently active with full platform access."}
+                : "All tutor accounts are currently active with full platform access."}
             </Text>
 
             {searchQuery ? (
@@ -540,7 +551,7 @@ const AdminBlockedStudents = () => {
             ) : (
               <TouchableOpacity
                 style={styles.emptyActionButton}
-                onPress={loadBlockedStudents}
+                onPress={loadBlockedTutors}
               >
                 <Icon name="refresh" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
                 <Text style={styles.emptyActionText}>Refresh Data</Text>
@@ -553,7 +564,7 @@ const AdminBlockedStudents = () => {
   );
 };
 
-export default AdminBlockedStudents;
+export default AdminBlockedTutors;
 
 //====================================================
 // STYLESHEET
@@ -698,7 +709,7 @@ const styles = StyleSheet.create({
   },
 
   // Card Components
-  studentCard: {
+  tutorCard: {
     backgroundColor: Theme.surface,
     borderRadius: 16,
     padding: 16,
@@ -711,7 +722,7 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
   },
-  studentHeader: {
+  tutorHeader: {
     flexDirection: "row",
     alignItems: "center",
   },
@@ -728,7 +739,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: Theme.primary,
   },
-  studentHeaderInfo: {
+  tutorHeaderInfo: {
     flex: 1,
     marginLeft: 12,
   },
@@ -736,7 +747,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  studentName: {
+  tutorName: {
     fontSize: 16,
     fontWeight: "700",
     color: Theme.textPrimary,
@@ -747,7 +758,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 4,
   },
-  studentIdText: {
+  tutorIdText: {
     fontSize: 12,
     color: Theme.textMuted,
     marginLeft: 4,
@@ -916,604 +927,3 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// import React, { useEffect, useState } from "react";
-// import {
-//   View,
-//   Text,
-//   StyleSheet,
-//   SafeAreaView,
-//   FlatList,
-//   TouchableOpacity,
-//   Image,
-//   Alert,
-//   StatusBar,
-//   ActivityIndicator,
-// } from "react-native";
-// import Icon from "react-native-vector-icons/MaterialIcons";
-// import AsyncStorage from "@react-native-async-storage/async-storage";
-// import axios from "axios";
-// import colors from "../utils/colors";
-// import { BASE_URL } from "../../config/api";
-
-// const AdminBlockListScreen = ({ navigation }) => {
-//   const [data, setData] = useState([]);
-//   const [loading, setLoading] = useState(true);
-
-//   useEffect(() => {
-//     fetchBlockedUsers();
-//   }, []);
-
-//   const fetchBlockedUsers = async () => {
-//   try {
-//     setLoading(true);
-
-//     const token = await AsyncStorage.getItem("token");
-
-//     const response = await axios.get(
-//       `${BASE_URL}/Admin/blocked-users`,
-//       {
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//         },
-//       }
-//     );
-
-//     setData(response.data);
-//   } catch (error) {
-//     console.log(error.response?.data || error);
-
-//     Alert.alert(
-//       "Error",
-//       error.response?.data?.message ||
-//         "Failed to load blocked users"
-//     );
-//   } finally {
-//     setLoading(false);
-//   }
-// };
-
-//   const handleRestore = async (id) => {
-//   try {
-
-//     const token = await AsyncStorage.getItem("token");
-
-//     const response = await axios.put(
-//       `${BASE_URL}/Admin/restore-user/${id}`,
-//       {},
-//       {
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//         },
-//       }
-//     );
-
-//     Alert.alert("Success", response.data.message);
-
-//     fetchBlockedUsers();
-
-//   } catch (error) {
-
-//     console.log(error.response?.data || error);
-
-//     Alert.alert(
-//       "Error",
-//       error.response?.data?.message ||
-//       "Failed to restore user"
-//     );
-//   }
-// };
-
-//   const renderItem = ({ item, index }) => (
-//     <View style={styles.card}>
-//       <View style={styles.row}>
-//         <Image
-//           source={
-//             index % 4 === 0
-//               ? require("../../../assets/images/user1.png")
-//               : index % 4 === 1
-//               ? require("../../../assets/images/user2.png")
-//               : index % 4 === 2
-//               ? require("../../../assets/images/user3.png")
-//               : require("../../../assets/images/user4.png")
-//           }
-//           style={styles.avatar}
-//         />
-
-//         <View style={styles.info}>
-//           <Text style={styles.name}>{item.fullName}</Text>
-
-//           <Text style={styles.subject}>
-//             {item.subjects || item.role || "No Subject"}
-//           </Text>
-
-//           <View style={styles.buttonRow}>
-//             <ActionButton
-//               title="Restore"
-//               icon="restore"
-//               onPress={() => handleRestore(item.id)}
-//             />
-//             <TouchableOpacity
-//               style={styles.viewBtn}
-//               onPress={() =>
-//                 navigation.navigate("AdminTutorDetailScreen", {
-//                   tutorId: item.id,
-//                 })
-//               }
-//             >
-//               <Text style={styles.buttonText}>View</Text>
-//             </TouchableOpacity>            
-//           </View>
-//         </View>
-//       </View>
-//     </View>
-//   );
-
-//   return (
-//     <SafeAreaView style={styles.container}>
-//       <StatusBar barStyle="dark-content" />
-
-//       {/* Header */}
-//       <View style={styles.header}>
-//         <TouchableOpacity onPress={() => navigation.goBack()}>
-//           <Icon name="arrow-back" size={26} color={colors.primary} />
-//         </TouchableOpacity>
-
-//         <Image
-//           source={require("../../../assets/images/logo.png")}
-//           style={styles.logo}
-//           resizeMode="contain"
-//         />
-
-//         <View style={{ width: 26 }} />
-//       </View>
-
-//       <Text style={styles.screenTitle}>Blocked Users</Text>
-
-//       {loading ? (
-//         <View style={styles.loaderContainer}>
-//           <ActivityIndicator size="large" color={colors.primary} />
-//         </View>
-//       ) : (
-//         <FlatList
-//           data={data}
-//           keyExtractor={(item) => item.id.toString()}
-//           renderItem={renderItem}
-//           showsVerticalScrollIndicator={false}
-//           contentContainerStyle={{ paddingBottom: 40 }}
-//           ListEmptyComponent={
-//             <Text style={styles.emptyText}>No blocked users found</Text>
-//           }
-//         />
-//       )}
-//     </SafeAreaView>
-//   );
-// };
-
-// export default AdminBlockListScreen;
-
-// const ActionButton = ({ title, icon, onPress, danger }) => (
-//   <TouchableOpacity
-//     style={[
-//       styles.button,
-//       { backgroundColor: danger ? "#FDECEA" : "#E3F2FD" },
-//     ]}
-//     onPress={onPress}
-//   >
-//     <Icon
-//       name={icon}
-//       size={16}
-//       color={danger ? "#D32F2F" : "#1976D2"}
-//       style={{ marginRight: 5 }}
-//     />
-//     <Text
-//       style={[
-//         styles.buttonText,
-//         { color: danger ? "#D32F2F" : "#1976D2" },
-//       ]}
-//     >
-//       {title}
-//     </Text>
-//   </TouchableOpacity>
-// );
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: "#EDE7F6",
-//     paddingHorizontal: 16,
-//   },
-
-//   header: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//     justifyContent: "space-between",
-//     marginTop: 40,
-//   },
-
-//   logo: {
-//     width: 120,
-//     height: 45,
-//   },
-
-//   screenTitle: {
-//     fontSize: 20,
-//     fontWeight: "700",
-//     marginVertical: 15,
-//     color: "#333",
-//   },
-
-//   loaderContainer: {
-//     flex: 1,
-//     justifyContent: "center",
-//     alignItems: "center",
-//   },
-
-//   emptyText: {
-//     textAlign: "center",
-//     marginTop: 40,
-//     fontSize: 16,
-//     color: "#777",
-//   },
-
-//   card: {
-//     backgroundColor: "#fff",
-//     borderRadius: 16,
-//     padding: 15,
-//     marginBottom: 12,
-//     elevation: 4,
-//   },
-
-//   row: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//   },
-
-//   avatar: {
-//     width: 60,
-//     height: 60,
-//     borderRadius: 30,
-//     marginRight: 12,
-//   },
-
-//   info: {
-//     flex: 1,
-//   },
-
-//   name: {
-//     fontSize: 16,
-//     fontWeight: "700",
-//     color: "#000",
-//   },
-
-//   subject: {
-//     fontSize: 13,
-//     color: "#666",
-//     marginVertical: 4,
-//   },
-
-//   buttonRow: {
-//     flexDirection: "row",
-//     marginTop: 8,
-//   },
-
-//   button: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//     paddingVertical: 6,
-//     paddingHorizontal: 12,
-//     borderRadius: 20,
-//     marginRight: 10,
-//   },
-
-//   buttonText: {
-//     fontSize: 12,
-//     fontWeight: "600",
-//   },
-//   viewBtn: {
-//   flex: 1,
-//   backgroundColor: "#2196F3",
-//   paddingVertical: 10,
-//   borderRadius: 8,
-//   alignItems: "center",
-//   marginHorizontal: 3,
-//   elevation: 2,
-// },
-//  buttonText: {
-//     color: "#fff",
-//     fontSize: 12,
-//   },
-// });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// import React, { useState } from "react";
-// import {
-//   View,
-//   Text,
-//   StyleSheet,
-//   SafeAreaView,
-//   FlatList,
-//   TouchableOpacity,
-//   Image,
-//   Alert,
-//   StatusBar,
-// } from "react-native";
-// import Icon from "react-native-vector-icons/MaterialIcons";
-// import colors from "../utils/colors";
-
-// const initialData = [
-//   {
-//     id: "1",
-//     name: "Faizan Shahid",
-//     subject: "Mathematics",
-//     image: require("../../../assets/images/user1.png"),
-//   },
-//   {
-//     id: "2",
-//     name: "Mesam Abbas",
-//     subject: "OOP",
-//     image: require("../../../assets/images/user2.png"),
-//   },
-//   {
-//     id: "3",
-//     name: "Maryam Bibi",
-//     subject: "Software Engineering",
-//     image: require("../../../assets/images/user3.png"),
-//   },
-//   {
-//     id: "4",
-//     name: "Mannan Rana Jee",
-//     subject: "PF",
-//     image: require("../../../assets/images/user4.png"),
-//   },
-// ];
-
-// const AdminBlockListScreen = ({ navigation }) => {
-//   const [data, setData] = useState(initialData);
-
-//   const handleRestore = (id) => {
-//     Alert.alert("Restore", "User restored successfully");
-//     setData(data.filter((item) => item.id !== id));
-//   };
-
-//   const handleDelete = (id) => {
-//     Alert.alert("Delete", "User deleted permanently");
-//     setData(data.filter((item) => item.id !== id));
-//   };
-
-//   const renderItem = ({ item }) => (
-//     <View style={styles.card}>
-//       <View style={styles.row}>
-//         <Image source={item.image} style={styles.avatar} />
-
-//         <View style={styles.info}>
-//           <Text style={styles.name}>{item.name}</Text>
-//           <Text style={styles.subject}>{item.subject}</Text>
-
-//           <View style={styles.buttonRow}>
-//             <ActionButton
-//               title="Restore"
-//               icon="restore"
-//               onPress={() => handleRestore(item.id)}
-//             />
-
-//             <ActionButton
-//               title="Delete"
-//               icon="delete"
-//               danger
-//               onPress={() => handleDelete(item.id)}
-//             />
-//           </View>
-//         </View>
-//       </View>
-//     </View>
-//   );
-
-//   return (
-//     <SafeAreaView style={styles.container}>
-//       <StatusBar barStyle="dark-content" />
-
-//       {/* Header */}
-//       <View style={styles.header}>
-//         <TouchableOpacity onPress={() => navigation.goBack()}>
-//           <Icon name="arrow-back" size={26} color={colors.primary} />
-//         </TouchableOpacity>
-
-//         <Image
-//           source={require("../../../assets/images/logo.png")}
-//           style={styles.logo}
-//           resizeMode="contain"
-//         />
-
-//         <View style={{ width: 26 }} />
-//       </View>
-
-//       {/* Title */}
-//       <Text style={styles.screenTitle}>Blocked Users</Text>
-
-//       {/* List */}
-//       <FlatList
-//         data={data}
-//         keyExtractor={(item) => item.id}
-//         renderItem={renderItem}
-//         showsVerticalScrollIndicator={false}
-//         contentContainerStyle={{ paddingBottom: 40 }}
-//       />
-//     </SafeAreaView>
-//   );
-// };
-
-// export default AdminBlockListScreen;
-
-// /* ---------- Button ---------- */
-// const ActionButton = ({ title, icon, onPress, danger }) => (
-//   <TouchableOpacity
-//     style={[
-//       styles.button,
-//       { backgroundColor: danger ? "#FDECEA" : "#E3F2FD" },
-//     ]}
-//     onPress={onPress}
-//   >
-//     <Icon
-//       name={icon}
-//       size={16}
-//       color={danger ? "#D32F2F" : "#1976D2"}
-//       style={{ marginRight: 5 }}
-//     />
-//     <Text
-//       style={[
-//         styles.buttonText,
-//         { color: danger ? "#D32F2F" : "#1976D2" },
-//       ]}
-//     >
-//       {title}
-//     </Text>
-//   </TouchableOpacity>
-// );
-
-// /* ================= STYLES ================= */
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: "#EDE7F6",
-//     paddingHorizontal: 16,
-//   },
-
-//   header: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//     justifyContent: "space-between",
-//     marginTop: 40,
-//   },
-
-//   logo: {
-//     width: 120,
-//     height: 45,
-//   },
-
-//   screenTitle: {
-//     fontSize: 20,
-//     fontWeight: "700",
-//     marginVertical: 15,
-//     color: "#333",
-//   },
-
-//   card: {
-//     backgroundColor: "#fff",
-//     borderRadius: 16,
-//     padding: 15,
-//     marginBottom: 12,
-//     elevation: 4,
-//   },
-
-//   row: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//   },
-
-//   avatar: {
-//     width: 60,
-//     height: 60,
-//     borderRadius: 30,
-//     marginRight: 12,
-//   },
-
-//   info: {
-//     flex: 1,
-//   },
-
-//   name: {
-//     fontSize: 16,
-//     fontWeight: "700",
-//     color: "#000",
-//   },
-
-//   subject: {
-//     fontSize: 13,
-//     color: "#666",
-//     marginVertical: 4,
-//   },
-
-//   buttonRow: {
-//     flexDirection: "row",
-//     marginTop: 8,
-//   },
-
-//   button: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//     paddingVertical: 6,
-//     paddingHorizontal: 12,
-//     borderRadius: 20,
-//     marginRight: 10,
-//   },
-
-//   buttonText: {
-//     fontSize: 12,
-//     fontWeight: "600",
-//   },
-// });

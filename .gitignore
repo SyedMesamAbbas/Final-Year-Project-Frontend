@@ -77,3 +77,12 @@ bin/
 obj/
 .vs/
 node_modules/
+
+
+
+node_modules/
+android/.gradle/
+android/app/build/
+ios/Pods/
+.env
+*.log
