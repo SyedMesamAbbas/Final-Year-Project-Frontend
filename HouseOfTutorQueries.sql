@@ -1,5 +1,3 @@
-SELECT @@SERVERNAME;
-
 Create Database HouseofTutor
 use HouseofTutor
 
