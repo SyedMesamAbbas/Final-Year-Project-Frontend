@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
+
 import {
   View,
   Text,
@@ -24,33 +30,45 @@ import { BASE_URL } from "../../config/api";
 import Colors from "../utils/colors";
 
 //==================================================
-// Design System Theme Tokens
+// DESIGN SYSTEM
 //==================================================
+
 const Theme = {
   primary: Colors?.primary || "#4F46E5",
   primaryLight: "#EEF2FF",
   primaryDark: "#4338CA",
+
   background: "#F8FAFC",
   surface: "#FFFFFF",
+
   textPrimary: "#0F172A",
   textSecondary: "#475569",
   textMuted: "#94A3B8",
+
   border: "#E2E8F0",
   borderSubtle: "#F1F5F9",
+
   danger: "#EF4444",
   dangerLight: "#FEF2F2",
   dangerBorder: "#FCA5A5",
+
   success: "#10B981",
   successLight: "#ECFDF5",
+
   accent: "#6366F1",
 };
+
+//==================================================
+// COMPONENT
+//==================================================
 
 const AdminBlockedTutors = () => {
   const navigation = useNavigation();
 
   //==================================================
-  // States
+  // STATES
   //==================================================
+
   const [tutors, setTutors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -58,8 +76,9 @@ const AdminBlockedTutors = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   //==================================================
-  // Get Error Message
+  // ERROR MESSAGE
   //==================================================
+
   const getErrorMessage = (error, defaultMessage) => {
     if (typeof error?.response?.data === "string") {
       return error.response.data;
@@ -67,6 +86,10 @@ const AdminBlockedTutors = () => {
 
     if (error?.response?.data?.message) {
       return error.response.data.message;
+    }
+
+    if (error?.response?.data?.title) {
+      return error.response.data.title;
     }
 
     if (error?.message) {
@@ -77,9 +100,10 @@ const AdminBlockedTutors = () => {
   };
 
   //==================================================
-  // Fetch Blocked Tutors
+  // LOAD BLOCKED TUTORS
   //==================================================
-  const loadBlockedTutors = async () => {
+
+  const loadBlockedTutors = useCallback(async () => {
     try {
       const token = await AsyncStorage.getItem("token");
 
@@ -88,20 +112,35 @@ const AdminBlockedTutors = () => {
           "Authentication Error",
           "Login token not found. Please login again."
         );
+
         return;
       }
 
-      const response = await axios.get(`${BASE_URL}/Admin/blocked-tutors`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      console.log(
+        "Loading blocked tutors from:",
+        `${BASE_URL}/Admin/blocked-tutors`
+      );
 
-      console.log("Blocked Tutors Response:", response.data);
+      const response = await axios.get(
+        `${BASE_URL}/Admin/blocked-tutors`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+          timeout: 15000,
+        }
+      );
+
+      console.log(
+        "Blocked Tutors API Response:",
+        JSON.stringify(response.data, null, 2)
+      );
 
       if (Array.isArray(response.data)) {
         setTutors(response.data);
       } else {
+        console.log("Unexpected API response:", response.data);
         setTutors([]);
       }
     } catch (error) {
@@ -112,74 +151,136 @@ const AdminBlockedTutors = () => {
 
       Alert.alert(
         "Error",
-        getErrorMessage(error, "Unable to load blocked tutors.")
+        getErrorMessage(
+          error,
+          "Unable to load blocked tutors."
+        )
       );
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
-
-  //==================================================
-  // Initial Load
-  //==================================================
-  useEffect(() => {
-    loadBlockedTutors();
   }, []);
 
   //==================================================
-  // Pull To Refresh
+  // INITIAL LOAD
   //==================================================
+
+  useEffect(() => {
+    loadBlockedTutors();
+  }, [loadBlockedTutors]);
+
+  //==================================================
+  // PULL TO REFRESH
+  //==================================================
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     loadBlockedTutors();
-  }, []);
+  }, [loadBlockedTutors]);
 
   //==================================================
-  // Filtered Tutors List
+  // FILTER TUTORS
   //==================================================
+
   const filteredTutors = useMemo(() => {
-    if (!searchQuery.trim()) return tutors;
-    const query = searchQuery.toLowerCase().trim();
+    const query = searchQuery.trim().toLowerCase();
+
+    if (!query) {
+      return tutors;
+    }
+
     return tutors.filter((item) => {
-      const name = item?.fullName ? item.fullName.toLowerCase() : "";
-      const email = item?.email ? item.email.toLowerCase() : "";
-      const tutorId = item?.tutorId
-        ? item.tutorId.toString().toLowerCase()
-        : item?.studentId
-        ? item.studentId.toString().toLowerCase()
+      const name = item?.fullName
+        ? String(item.fullName).toLowerCase()
         : "";
-      const phone = item?.phone ? item.phone.toLowerCase() : "";
-      const cnic = item?.cnic ? item.cnic.toLowerCase() : "";
+
+      const email = item?.email
+        ? String(item.email).toLowerCase()
+        : "";
+
+      const id = item?.id
+        ? String(item.id).toLowerCase()
+        : "";
+
+      const phone = item?.phone
+        ? String(item.phone).toLowerCase()
+        : "";
+
+      const cnic = item?.cnic
+        ? String(item.cnic).toLowerCase()
+        : "";
+
+      const location = item?.location
+        ? String(item.location).toLowerCase()
+        : "";
 
       return (
         name.includes(query) ||
         email.includes(query) ||
-        tutorId.includes(query) ||
+        id.includes(query) ||
         phone.includes(query) ||
-        cnic.includes(query)
+        cnic.includes(query) ||
+        location.includes(query)
       );
     });
   }, [tutors, searchQuery]);
 
   //==================================================
-  // Helper: Copy to Clipboard
+  // COPY TO CLIPBOARD
   //==================================================
+
   const handleCopyText = (text, label) => {
-    if (!text || text === "Not Available") return;
-    Clipboard.setString(text);
+    if (
+      text === null ||
+      text === undefined ||
+      String(text).trim() === "" ||
+      text === "Not Available"
+    ) {
+      return;
+    }
+
+    Clipboard.setString(String(text));
+
     if (Platform.OS === "android") {
-      Alert.alert("Copied", `${label} copied to clipboard.`);
+      Alert.alert(
+        "Copied",
+        `${label} copied to clipboard.`
+      );
     }
   };
 
   //==================================================
-  // Restore Tutor Confirmation
+  // GET INITIALS
   //==================================================
+
+  const getInitials = (name) => {
+    if (!name) {
+      return "TR";
+    }
+
+    const parts = String(name)
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+
+    return String(name)
+      .substring(0, 2)
+      .toUpperCase();
+  };
+
+  //==================================================
+  // RESTORE CONFIRMATION
+  //==================================================
+
   const confirmRestore = (tutor) => {
     Alert.alert(
       "Restore Access",
-      `Are you sure you want to reinstate access privileges for ${
+      `Are you sure you want to restore access for ${
         tutor?.fullName || "this tutor"
       }?`,
       [
@@ -197,18 +298,23 @@ const AdminBlockedTutors = () => {
   };
 
   //==================================================
-  // Restore Tutor
+  // RESTORE TUTOR
   //==================================================
-  const restoreTutor = async (tutor) => {
-    const idToRestore = tutor?.tutorId ?? tutor?.studentId ?? tutor?.id;
 
-    if (!idToRestore) {
-      Alert.alert("Error", "Tutor ID is missing. Cannot perform restore.");
+  const restoreTutor = async (tutor) => {
+    const tutorId = tutor?.id;
+
+    if (!tutorId) {
+      Alert.alert(
+        "Error",
+        "Tutor ID is missing. Cannot restore tutor."
+      );
+
       return;
     }
 
     try {
-      setRestoringId(idToRestore);
+      setRestoringId(tutorId);
 
       const token = await AsyncStorage.getItem("token");
 
@@ -217,20 +323,26 @@ const AdminBlockedTutors = () => {
           "Authentication Error",
           "Login token not found. Please login again."
         );
+
         return;
       }
 
       const response = await axios.put(
-        `${BASE_URL}/Admin/restore-tutors/${idToRestore}`,
+        `${BASE_URL}/Admin/restore-tutors/${tutorId}`,
         {},
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            Accept: "application/json",
           },
+          timeout: 15000,
         }
       );
 
-      console.log("Restore Tutor Response:", response.data);
+      console.log(
+        "Restore Tutor Response:",
+        response.data
+      );
 
       Alert.alert(
         "Tutor Restored",
@@ -238,12 +350,11 @@ const AdminBlockedTutors = () => {
           "Tutor account has been restored successfully."
       );
 
-      // Remove restored tutor from blocked list
+      // Remove restored tutor from current list
       setTutors((previousTutors) =>
-        previousTutors.filter((item) => {
-          const itemId = item?.tutorId ?? item?.studentId ?? item?.id;
-          return itemId !== idToRestore;
-        })
+        previousTutors.filter(
+          (item) => item?.id !== tutorId
+        )
       );
     } catch (error) {
       console.log(
@@ -253,7 +364,10 @@ const AdminBlockedTutors = () => {
 
       Alert.alert(
         "Error",
-        getErrorMessage(error, "Unable to restore tutor.")
+        getErrorMessage(
+          error,
+          "Unable to restore tutor."
+        )
       );
     } finally {
       setRestoringId(null);
@@ -261,153 +375,208 @@ const AdminBlockedTutors = () => {
   };
 
   //==================================================
-  // Helper: Get Initials
+  // RENDER INFORMATION ROW
   //==================================================
-  const getInitials = (name) => {
-    if (!name) return "TR";
-    const parts = name.trim().split(" ");
-    if (parts.length >= 2) {
-      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-    }
-    return name.substring(0, 2).toUpperCase();
+
+  const renderInfoRow = ({
+    icon,
+    label,
+    value,
+    copyable = false,
+    numberOfLines = 1,
+  }) => {
+    const displayValue =
+      value !== null &&
+      value !== undefined &&
+      String(value).trim() !== ""
+        ? String(value)
+        : "Not Available";
+
+    return (
+      <TouchableOpacity
+        activeOpacity={copyable ? 0.7 : 1}
+        onPress={() => {
+          if (copyable && displayValue !== "Not Available") {
+            handleCopyText(displayValue, label);
+          }
+        }}
+        style={styles.infoRow}
+      >
+        <View style={styles.infoIconContainer}>
+          <Icon
+            name={icon}
+            size={15}
+            color={Theme.primary}
+          />
+        </View>
+
+        <View style={styles.infoContent}>
+          <Text style={styles.infoLabel}>
+            {label}
+          </Text>
+
+          <Text
+            style={[
+              styles.infoValue,
+              displayValue === "Not Available" &&
+                styles.notAvailableText,
+            ]}
+            numberOfLines={numberOfLines}
+          >
+            {displayValue}
+          </Text>
+        </View>
+
+        {copyable &&
+          displayValue !== "Not Available" && (
+            <Icon
+              name="content-copy"
+              size={14}
+              color={Theme.textMuted}
+            />
+          )}
+      </TouchableOpacity>
+    );
   };
 
   //==================================================
-  // Render Tutor Card
+  // RENDER TUTOR
   //==================================================
+
   const renderTutor = ({ item }) => {
-    const tutorId = item?.tutorId ?? item?.studentId ?? item?.id ?? "N/A";
-    const isRestoring = restoringId === tutorId;
-    const initials = getInitials(item?.fullName);
+    const tutorId = item?.id ?? "N/A";
+
+    const isRestoring =
+      restoringId === tutorId;
+
+    const initials = getInitials(
+      item?.fullName
+    );
 
     return (
       <View style={styles.tutorCard}>
-        {/* Card Header */}
+        {/*========================================
+            CARD HEADER
+        ========================================*/}
+
         <View style={styles.tutorHeader}>
           <View style={styles.avatarContainer}>
-            <Text style={styles.avatarText}>{initials}</Text>
+            <Text style={styles.avatarText}>
+              {initials}
+            </Text>
           </View>
 
           <View style={styles.tutorHeaderInfo}>
             <View style={styles.nameRow}>
-              <Text style={styles.tutorName} numberOfLines={1}>
-                {item?.fullName || "Unknown Tutor"}
+              <Text
+                style={styles.tutorName}
+                numberOfLines={1}
+              >
+                {item?.fullName ||
+                  "Unknown Tutor"}
               </Text>
             </View>
+
             <View style={styles.idChip}>
-              <Icon name="fingerprint" size={12} color={Theme.textMuted} />
-              <Text style={styles.tutorIdText}>ID: {tutorId}</Text>
+              <Icon
+                name="fingerprint"
+                size={12}
+                color={Theme.textMuted}
+              />
+
+              <Text style={styles.tutorIdText}>
+                ID: {tutorId}
+              </Text>
             </View>
           </View>
 
           <View style={styles.blockedBadge}>
             <View style={styles.statusDot} />
-            <Text style={styles.blockedBadgeText}>Blocked</Text>
+
+            <Text style={styles.blockedBadgeText}>
+              Blocked
+            </Text>
           </View>
         </View>
 
         <View style={styles.divider} />
 
-        {/* Details Grid */}
+        {/*========================================
+            DETAILS
+        ========================================*/}
+
         <View style={styles.detailsGrid}>
-          {/* Email Row */}
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => handleCopyText(item?.email, "Email")}
-            style={styles.infoRow}
-          >
-            <View style={styles.infoIconContainer}>
-              <Icon name="alternate-email" size={15} color={Theme.primary} />
-            </View>
-            <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>Email Address</Text>
-              <Text style={styles.infoValue} numberOfLines={1}>
-                {item?.email || "Not Available"}
-              </Text>
-            </View>
-            {item?.email && (
-              <Icon name="content-copy" size={14} color={Theme.textMuted} />
-            )}
-          </TouchableOpacity>
+          {/* EMAIL */}
 
-          {/* Phone Row */}
-          <View style={styles.infoRow}>
-            <View style={styles.infoIconContainer}>
-              <Icon name="phone" size={15} color={Theme.primary} />
-            </View>
-            <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>Phone Number</Text>
-              <Text style={styles.infoValue}>
-                {item?.phone || "Not Available"}
-              </Text>
-            </View>
-          </View>
+          {renderInfoRow({
+            icon: "alternate-email",
+            label: "Email Address",
+            value: item?.email,
+            copyable: true,
+          })}
 
-          {/* CNIC & Father CNIC Two-Column Section */}
-          <View style={styles.twoColumnRow}>
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => handleCopyText(item?.cnic, "CNIC")}
-              style={[styles.infoRow, styles.flexHalf]}
-            >
-              <View style={styles.infoIconContainer}>
-                <Icon name="badge" size={15} color={Theme.primary} />
-              </View>
-              <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Tutor CNIC</Text>
-                <Text style={styles.infoValueCompact} numberOfLines={1}>
-                  {item?.cnic || "N/A"}
-                </Text>
-              </View>
-            </TouchableOpacity>
+          {/* PHONE */}
 
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => handleCopyText(item?.fatherCnic, "Father CNIC")}
-              style={[styles.infoRow, styles.flexHalf]}
-            >
-              <View style={styles.infoIconContainer}>
-                <Icon name="people-outline" size={15} color={Theme.primary} />
-              </View>
-              <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Father CNIC</Text>
-                <Text style={styles.infoValueCompact} numberOfLines={1}>
-                  {item?.fatherCnic || "N/A"}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          </View>
+          {renderInfoRow({
+            icon: "phone",
+            label: "Phone Number",
+            value: item?.phone,
+            copyable: true,
+          })}
 
-          {/* Location Row */}
-          <View style={styles.infoRow}>
-            <View style={styles.infoIconContainer}>
-              <Icon name="place" size={15} color={Theme.primary} />
-            </View>
-            <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>Location / Address</Text>
-              <Text style={styles.infoValue} numberOfLines={2}>
-                {item?.location || "Not Provided"}
-              </Text>
-            </View>
-          </View>
+          {/* CNIC */}
+
+          {renderInfoRow({
+            icon: "badge",
+            label: "CNIC",
+            value: item?.cnic,
+            copyable: true,
+          })}
+
+          {/* LOCATION */}
+
+          {renderInfoRow({
+            icon: "place",
+            label: "Location / Address",
+            value: item?.location,
+            numberOfLines: 2,
+          })}
         </View>
 
-        {/* Action Section */}
+        {/*========================================
+            RESTORE BUTTON
+        ========================================*/}
+
         <TouchableOpacity
           style={[
             styles.restoreButton,
-            isRestoring && styles.restoreButtonDisabled,
+            isRestoring &&
+              styles.restoreButtonDisabled,
           ]}
           activeOpacity={0.8}
           disabled={isRestoring}
-          onPress={() => confirmRestore(item)}
+          onPress={() =>
+            confirmRestore(item)
+          }
         >
           {isRestoring ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
+            <ActivityIndicator
+              size="small"
+              color="#FFFFFF"
+            />
           ) : (
             <>
-              <Icon name="restore" size={18} color="#FFFFFF" />
-              <Text style={styles.restoreButtonText}>Restore Tutor</Text>
+              <Icon
+                name="restore"
+                size={18}
+                color="#FFFFFF"
+              />
+
+              <Text
+                style={styles.restoreButtonText}
+              >
+                Restore Tutor
+              </Text>
             </>
           )}
         </TouchableOpacity>
@@ -416,41 +585,78 @@ const AdminBlockedTutors = () => {
   };
 
   //==================================================
-  // Loading Screen
+  // LOADING SCREEN
   //==================================================
+
   if (loading) {
     return (
-      <SafeAreaView style={styles.loaderContainer}>
-        <StatusBar barStyle="dark-content" backgroundColor={Theme.surface} />
+      <SafeAreaView
+        style={styles.loaderContainer}
+      >
+        <StatusBar
+          barStyle="dark-content"
+          backgroundColor={Theme.surface}
+        />
+
         <View style={styles.loadingBox}>
-          <ActivityIndicator size="large" color={Theme.primary} />
-          <Text style={styles.loadingText}>Fetching blocked accounts...</Text>
+          <ActivityIndicator
+            size="large"
+            color={Theme.primary}
+          />
+
+          <Text style={styles.loadingText}>
+            Fetching blocked accounts...
+          </Text>
         </View>
       </SafeAreaView>
     );
   }
 
   //==================================================
-  // Main Render
+  // MAIN SCREEN
   //==================================================
+
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={Theme.surface} />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor={Theme.surface}
+      />
 
-      {/* Top Header */}
+      {/*========================================
+          HEADER
+      ========================================*/}
+
       <View style={styles.topHeader}>
         <TouchableOpacity
           style={styles.headerIconButton}
-          onPress={() => navigation.goBack()}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          onPress={() =>
+            navigation.goBack()
+          }
+          hitSlop={{
+            top: 8,
+            bottom: 8,
+            left: 8,
+            right: 8,
+          }}
           accessibilityLabel="Go Back"
         >
-          <Icon name="arrow-back-ios" size={16} color={Theme.textPrimary} style={{ marginLeft: 5 }} />
+          <Icon
+            name="arrow-back-ios"
+            size={16}
+            color={Theme.textPrimary}
+            style={{ marginLeft: 5 }}
+          />
         </TouchableOpacity>
 
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Blocked Tutors</Text>
-          <Text style={styles.headerSubtitle}>Account Access Management</Text>
+          <Text style={styles.headerTitle}>
+            Blocked Tutors
+          </Text>
+
+          <Text style={styles.headerSubtitle}>
+            Account Access Management
+          </Text>
         </View>
 
         <TouchableOpacity
@@ -458,52 +664,91 @@ const AdminBlockedTutors = () => {
           onPress={loadBlockedTutors}
           accessibilityLabel="Refresh list"
         >
-          <Icon name="refresh" size={20} color={Theme.textPrimary} />
+          <Icon
+            name="refresh"
+            size={20}
+            color={Theme.textPrimary}
+          />
         </TouchableOpacity>
       </View>
 
-      {/* Search & Overview Toolbar */}
+      {/*========================================
+          SEARCH
+      ========================================*/}
+
       <View style={styles.toolbarContainer}>
         <View style={styles.searchBar}>
-          <Icon name="search" size={20} color={Theme.textMuted} style={{ marginRight: 8 }} />
+          <Icon
+            name="search"
+            size={20}
+            color={Theme.textMuted}
+            style={{ marginRight: 8 }}
+          />
+
           <TextInput
             style={styles.searchInput}
-            placeholder="Search by name, ID, CNIC or email..."
-            placeholderTextColor={Theme.textMuted}
+            placeholder="Search by name, ID, phone, CNIC or email..."
+            placeholderTextColor={
+              Theme.textMuted
+            }
             value={searchQuery}
             onChangeText={setSearchQuery}
             clearButtonMode="while-editing"
             autoCorrect={false}
+            autoCapitalize="none"
           />
-          {searchQuery.length > 0 && Platform.OS !== "ios" && (
-            <TouchableOpacity onPress={() => setSearchQuery("")}>
-              <Icon name="close" size={18} color={Theme.textMuted} />
-            </TouchableOpacity>
-          )}
+
+          {searchQuery.length > 0 &&
+            Platform.OS !== "ios" && (
+              <TouchableOpacity
+                onPress={() =>
+                  setSearchQuery("")
+                }
+              >
+                <Icon
+                  name="close"
+                  size={18}
+                  color={Theme.textMuted}
+                />
+              </TouchableOpacity>
+            )}
         </View>
+
+        {/* SUMMARY */}
 
         <View style={styles.summaryBar}>
           <View style={styles.summaryBadge}>
-            <Icon name="shield" size={14} color={Theme.danger} />
-            <Text style={styles.summaryBadgeText}>
+            <Icon
+              name="shield"
+              size={14}
+              color={Theme.danger}
+            />
+
+            <Text
+              style={styles.summaryBadgeText}
+            >
               {tutors.length} Total Blocked
             </Text>
           </View>
+
           {searchQuery.trim().length > 0 && (
-            <Text style={styles.searchResultsCount}>
+            <Text
+              style={styles.searchResultsCount}
+            >
               Showing {filteredTutors.length} matches
             </Text>
           )}
         </View>
       </View>
 
-      {/* Tutor List */}
+      {/*========================================
+          TUTOR LIST
+      ========================================*/}
+
       <FlatList
         data={filteredTutors}
         keyExtractor={(item, index) =>
-          item?.tutorId?.toString() ??
-          item?.studentId?.toString() ??
-          item?.id?.toString() ??
+          item?.id?.toString() ||
           `tutor-${index}`
         }
         renderItem={renderTutor}
@@ -522,39 +767,75 @@ const AdminBlockedTutors = () => {
           />
         }
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <View style={styles.emptyIconCircle}>
+          <View
+            style={styles.emptyContainer}
+          >
+            <View
+              style={styles.emptyIconCircle}
+            >
               <Icon
-                name={searchQuery ? "search-off" : "verified-user"}
+                name={
+                  searchQuery
+                    ? "search-off"
+                    : "verified-user"
+                }
                 size={40}
-                color={searchQuery ? Theme.textMuted : Theme.success}
+                color={
+                  searchQuery
+                    ? Theme.textMuted
+                    : Theme.success
+                }
               />
             </View>
 
             <Text style={styles.emptyTitle}>
-              {searchQuery ? "No Matching Results" : "No Blocked Tutors"}
+              {searchQuery
+                ? "No Matching Results"
+                : "No Blocked Tutors"}
             </Text>
 
             <Text style={styles.emptyText}>
               {searchQuery
-                ? `No blocked accounts matched "${searchQuery}". Try searching with a different term.`
+                ? `No blocked tutors matched "${searchQuery}". Try another search.`
                 : "All tutor accounts are currently active with full platform access."}
             </Text>
 
             {searchQuery ? (
               <TouchableOpacity
-                style={styles.emptyActionButton}
-                onPress={() => setSearchQuery("")}
+                style={
+                  styles.emptyActionButton
+                }
+                onPress={() =>
+                  setSearchQuery("")
+                }
               >
-                <Text style={styles.emptyActionText}>Clear Search Query</Text>
+                <Text
+                  style={styles.emptyActionText}
+                >
+                  Clear Search Query
+                </Text>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
-                style={styles.emptyActionButton}
+                style={
+                  styles.emptyActionButton
+                }
                 onPress={loadBlockedTutors}
               >
-                <Icon name="refresh" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
-                <Text style={styles.emptyActionText}>Refresh Data</Text>
+                <Icon
+                  name="refresh"
+                  size={18}
+                  color="#FFFFFF"
+                  style={{
+                    marginRight: 6,
+                  }}
+                />
+
+                <Text
+                  style={styles.emptyActionText}
+                >
+                  Refresh Data
+                </Text>
               </TouchableOpacity>
             )}
           </View>
@@ -576,13 +857,17 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.background,
   },
 
-  // Loader
+  //==================================================
+  // LOADER
+  //==================================================
+
   loaderContainer: {
     flex: 1,
     backgroundColor: Theme.background,
     justifyContent: "center",
     alignItems: "center",
   },
+
   loadingBox: {
     alignItems: "center",
     padding: 28,
@@ -592,10 +877,14 @@ const styles = StyleSheet.create({
     shadowColor: "#0F172A",
     shadowOpacity: 0.08,
     shadowRadius: 16,
-    shadowOffset: { width: 0, height: 6 },
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
     borderWidth: 1,
     borderColor: Theme.border,
   },
+
   loadingText: {
     marginTop: 14,
     color: Theme.textSecondary,
@@ -603,7 +892,10 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  // Header
+  //==================================================
+  // HEADER
+  //==================================================
+
   topHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -614,6 +906,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Theme.border,
   },
+
   headerIconButton: {
     width: 40,
     height: 40,
@@ -624,16 +917,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Theme.border,
   },
+
   headerCenter: {
     flex: 1,
     alignItems: "center",
   },
+
   headerTitle: {
     fontSize: 18,
     fontWeight: "700",
     color: Theme.textPrimary,
     letterSpacing: -0.3,
   },
+
   headerSubtitle: {
     fontSize: 11,
     color: Theme.textMuted,
@@ -641,12 +937,16 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // Toolbar
+  //==================================================
+  // TOOLBAR
+  //==================================================
+
   toolbarContainer: {
     paddingHorizontal: 16,
     paddingTop: 14,
     paddingBottom: 10,
   },
+
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
@@ -659,9 +959,13 @@ const styles = StyleSheet.create({
     shadowColor: "#0F172A",
     shadowOpacity: 0.03,
     shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
     elevation: 1,
   },
+
   searchInput: {
     flex: 1,
     fontSize: 14,
@@ -669,6 +973,7 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
     fontWeight: "400",
   },
+
   summaryBar: {
     flexDirection: "row",
     alignItems: "center",
@@ -676,6 +981,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingHorizontal: 2,
   },
+
   summaryBadge: {
     flexDirection: "row",
     alignItems: "center",
@@ -686,29 +992,38 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Theme.dangerBorder,
   },
+
   summaryBadgeText: {
     fontSize: 12,
     fontWeight: "600",
     color: Theme.danger,
     marginLeft: 6,
   },
+
   searchResultsCount: {
     fontSize: 12,
     color: Theme.textMuted,
     fontWeight: "500",
   },
 
-  // List Layout
+  //==================================================
+  // LIST
+  //==================================================
+
   listContent: {
     paddingHorizontal: 16,
     paddingBottom: 32,
   },
+
   emptyList: {
     flexGrow: 1,
     paddingHorizontal: 16,
   },
 
-  // Card Components
+  //==================================================
+  // TUTOR CARD
+  //==================================================
+
   tutorCard: {
     backgroundColor: Theme.surface,
     borderRadius: 16,
@@ -720,12 +1035,17 @@ const styles = StyleSheet.create({
     shadowColor: "#0F172A",
     shadowOpacity: 0.04,
     shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
   },
+
   tutorHeader: {
     flexDirection: "row",
     alignItems: "center",
   },
+
   avatarContainer: {
     width: 44,
     height: 44,
@@ -734,36 +1054,44 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+
   avatarText: {
     fontSize: 15,
     fontWeight: "700",
     color: Theme.primary,
   },
+
   tutorHeaderInfo: {
     flex: 1,
     marginLeft: 12,
   },
+
   nameRow: {
     flexDirection: "row",
     alignItems: "center",
   },
+
   tutorName: {
     fontSize: 16,
     fontWeight: "700",
     color: Theme.textPrimary,
     letterSpacing: -0.2,
+    flexShrink: 1,
   },
+
   idChip: {
     flexDirection: "row",
     alignItems: "center",
     marginTop: 4,
   },
+
   tutorIdText: {
     fontSize: 12,
     color: Theme.textMuted,
     marginLeft: 4,
     fontWeight: "500",
   },
+
   blockedBadge: {
     flexDirection: "row",
     alignItems: "center",
@@ -774,6 +1102,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Theme.dangerBorder,
   },
+
   statusDot: {
     width: 6,
     height: 6,
@@ -781,11 +1110,16 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.danger,
     marginRight: 5,
   },
+
   blockedBadgeText: {
     color: Theme.danger,
     fontSize: 11,
     fontWeight: "700",
   },
+
+  //==================================================
+  // DIVIDER
+  //==================================================
 
   divider: {
     height: 1,
@@ -793,17 +1127,14 @@ const styles = StyleSheet.create({
     marginVertical: 14,
   },
 
-  // Information Rows
+  //==================================================
+  // DETAILS
+  //==================================================
+
   detailsGrid: {
     gap: 8,
   },
-  twoColumnRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  flexHalf: {
-    flex: 1,
-  },
+
   infoRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -814,6 +1145,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Theme.borderSubtle,
   },
+
   infoIconContainer: {
     width: 28,
     height: 28,
@@ -825,9 +1157,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Theme.border,
   },
+
   infoContent: {
     flex: 1,
   },
+
   infoLabel: {
     fontSize: 10,
     color: Theme.textMuted,
@@ -835,20 +1169,23 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.3,
   },
+
   infoValue: {
     fontSize: 13,
     color: Theme.textPrimary,
     fontWeight: "600",
     marginTop: 2,
   },
-  infoValueCompact: {
-    fontSize: 12,
-    color: Theme.textPrimary,
-    fontWeight: "600",
-    marginTop: 2,
+
+  notAvailableText: {
+    color: Theme.textMuted,
+    fontWeight: "500",
   },
 
-  // Restore Action Button
+  //==================================================
+  // RESTORE BUTTON
+  //==================================================
+
   restoreButton: {
     marginTop: 14,
     backgroundColor: Theme.success,
@@ -860,12 +1197,17 @@ const styles = StyleSheet.create({
     shadowColor: Theme.success,
     shadowOpacity: 0.2,
     shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
     elevation: 2,
   },
+
   restoreButtonDisabled: {
     opacity: 0.6,
   },
+
   restoreButtonText: {
     color: "#FFFFFF",
     fontSize: 14,
@@ -873,13 +1215,17 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
 
-  // Empty State
+  //==================================================
+  // EMPTY STATE
+  //==================================================
+
   emptyContainer: {
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 56,
     paddingHorizontal: 24,
   },
+
   emptyIconCircle: {
     width: 80,
     height: 80,
@@ -893,13 +1239,18 @@ const styles = StyleSheet.create({
     shadowColor: "#0F172A",
     shadowOpacity: 0.04,
     shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
   },
+
   emptyTitle: {
     fontSize: 18,
     fontWeight: "700",
     color: Theme.textPrimary,
   },
+
   emptyText: {
     fontSize: 13,
     color: Theme.textSecondary,
@@ -908,6 +1259,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     maxWidth: 290,
   },
+
   emptyActionButton: {
     marginTop: 20,
     backgroundColor: Theme.primary,
@@ -919,8 +1271,12 @@ const styles = StyleSheet.create({
     shadowColor: Theme.primary,
     shadowOpacity: 0.2,
     shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
   },
+
   emptyActionText: {
     color: "#FFFFFF",
     fontSize: 14,

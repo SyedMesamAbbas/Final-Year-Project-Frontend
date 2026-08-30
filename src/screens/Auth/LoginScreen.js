@@ -72,14 +72,21 @@ const LoginScreen = ({ navigation }) => {
 
       const user = response.data;
 
-      // Store Auth Session Information
-      await AsyncStorage.setItem("token", user.token);
-      await AsyncStorage.setItem("userId", user.userId.toString());
-      await AsyncStorage.setItem("role", user.role);
+      // Store Auth Session Information safely as strings
+      if (user.token) await AsyncStorage.setItem("token", String(user.token));
+      if (user.userId !== undefined && user.userId !== null) {
+        await AsyncStorage.setItem("userId", String(user.userId));
+      }
+      if (user.role) await AsyncStorage.setItem("role", String(user.role));
       await AsyncStorage.setItem("fullName", user.fullName || "");
       await AsyncStorage.setItem("email", user.email || "");
 
-      if (user.latitude !== null && user.longitude !== null && user.latitude !== undefined && user.longitude !== undefined) {
+      if (
+        user.latitude !== null &&
+        user.longitude !== null &&
+        user.latitude !== undefined &&
+        user.longitude !== undefined
+      ) {
         await AsyncStorage.setItem("latitude", user.latitude.toString());
         await AsyncStorage.setItem("longitude", user.longitude.toString());
       }
@@ -108,12 +115,13 @@ const LoginScreen = ({ navigation }) => {
       console.log("FULL ERROR:", error);
       console.log("Response Error:", error.response?.data);
 
-      Alert.alert("FULL ERROR:", error);
+      // Extract serializable error message to avoid Bridge serialization crashes
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Invalid credentials or network issue. Please try again.";
 
-      Alert.alert(
-        "Login Failed",
-        error.response?.data?.message || "Invalid credentials or network issue. Please try again."
-      );
+      Alert.alert("Login Failed", String(errorMessage));
     } finally {
       setIsLoading(false);
     }
@@ -220,40 +228,6 @@ const LoginScreen = ({ navigation }) => {
               </View>
             </View>
 
-            {/* Options Row: Remember Me & Forgot Password */}
-            {/* <View style={styles.optionsRow}>
-              <TouchableOpacity
-                style={styles.rememberContainer}
-                onPress={() => setRemember(!remember)}
-                activeOpacity={0.8}
-                disabled={isLoading}
-              >
-                <View
-                  style={[
-                    styles.checkbox,
-                    remember && styles.checkedBox,
-                  ]}
-                >
-                  {remember && (
-                    <Ionicons name="checkmark" size={12} color="#FFFFFF" />
-                  )}
-                </View>
-                <Text style={styles.rememberText}>Remember me</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() =>
-                  Alert.alert(
-                    "Reset Password",
-                    "Please contact support or use the web portal to reset your password."
-                  )
-                }
-                activeOpacity={0.7}
-              >
-                <Text style={styles.forgotText}>Forgot password?</Text>
-              </TouchableOpacity>
-            </View> */}
-
             {/* Main Action Button */}
             <View style={styles.actionButtonWrapper}>
               {isLoading ? (
@@ -300,10 +274,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 24,
     paddingBottom: 32,
-    justifyContent: "center",
+    justify: "center",
   },
-
-  // Header Styling
   headerContainer: {
     alignItems: "center",
     marginBottom: 28,
@@ -312,7 +284,7 @@ const styles = StyleSheet.create({
     width: 90,
     height: 90,
     borderRadius: 24,
-    backgroundColor: colors.primary,//"#FFFFFF",
+    backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 16,
@@ -343,8 +315,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     maxWidth: 280,
   },
-
-  // Card Surface
   formCard: {
     backgroundColor: "#FFFFFF",
     borderRadius: 20,
@@ -395,47 +365,6 @@ const styles = StyleSheet.create({
     padding: 6,
     marginLeft: 4,
   },
-
-  // Options Controls
-  optionsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginVertical: 4,
-    marginBottom: 22,
-  },
-  rememberContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 4,
-  },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 6,
-    borderWidth: 1.5,
-    borderColor: "#94A3B8",
-    marginRight: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FFFFFF",
-  },
-  checkedBox: {
-    backgroundColor: PRIMARY_COLOR,
-    borderColor: PRIMARY_COLOR,
-  },
-  rememberText: {
-    fontSize: 13,
-    color: "#475569",
-    fontWeight: "500",
-  },
-  forgotText: {
-    fontSize: 13,
-    color: PRIMARY_COLOR,
-    fontWeight: "600",
-  },
-
-  // Action Button
   actionButtonWrapper: {
     marginTop: 4,
   },
@@ -454,8 +383,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-
-  // Footer Controls
   footerContainer: {
     alignItems: "center",
     marginTop: 32,
