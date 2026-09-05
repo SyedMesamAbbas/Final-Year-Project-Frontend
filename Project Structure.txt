@@ -25,16 +25,16 @@ HouseOfTutor/
 │   │   ├── Admin/
 │   │   │   ├── AdminApprovedTutor.js
 │   │   │   ├── AdminBlockedStudent.js
-│   │   │   ├── AdminBlockedListScreen.js (Blocked Tutor Shown)
-│   │   │   ├── AdminClassesScreen.js
-│   │   │   ├── AdminDrawerScreen.js
-│   │   │   ├── AdminFeedbackScreen.js
-│   │   │   ├── AdminHome.js
+│   │   │   ├── AdminBlockedListScreen.js (Blocked Tutor Shown) (Done)
+│   │   │   ├── AdminClassesScreen.js (Done)
+│   │   │   ├── AdminDrawerScreen.js (Done)
+│   │   │   ├── AdminFeedbackScreen.js (Done)
+│   │   │   ├── AdminHome.js (Done)
 │   │   │   ├── AdminProfileScreen.js
-│   │   │   ├── AdminStudentScreen.js
-│   │   │   ├── AdminSubjectScreen.js
+│   │   │   ├── AdminStudentScreen.js (Done)
+│   │   │   ├── AdminSubjectScreen.js (Done)
 │   │   │   ├── AdminTutorDetailScreen.js
-│   │   │   ├── AdminTutorScreen.js (Approved Tutor Shown)
+│   │   │   ├── AdminTutorScreen.js (Approved Tutor Shown) (Done)
 │   │   │   └── TutorCourses.js
 │   │   ├── Tutor/
 │   │   │   ├── History.js

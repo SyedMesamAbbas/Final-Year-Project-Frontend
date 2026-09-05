@@ -124,91 +124,286 @@ const StudentFindTutor = ({ navigation, route }) => {
   // SEND REQUEST
   // ==========================
   const sendRequest = async () => {
+    if (requestLoading) return;
+
     try {
+      // =====================================================
+      // VALIDATION
+      // =====================================================
+
       if (!selectedTutor) {
         Alert.alert("Validation Error", "Tutor is not selected.");
         return;
       }
+
+      if (!courseId) {
+        Alert.alert("Validation Error", "Course is not selected.");
+        return;
+      }
+
       if (!selectedDay) {
         Alert.alert("Validation Error", "Please select a day.");
         return;
       }
+
       if (!selectedTime) {
         Alert.alert("Validation Error", "Please select a time slot.");
         return;
       }
+
       if (!learningMode) {
         Alert.alert("Validation Error", "Learning mode is required.");
         return;
       }
 
+      if (
+        learningMode !== "FullTime" &&
+        learningMode !== "SpecificTime"
+      ) {
+        Alert.alert("Validation Error", "Invalid learning mode.");
+        return;
+      }
+
+      // =====================================================
+      // SPECIFIC TIME VALIDATION
+      // =====================================================
+
+      let durationValue = null;
+      let durationUnitValue = null;
+
       if (learningMode === "SpecificTime") {
-        if (!learningDuration || Number(learningDuration) <= 0) {
-          Alert.alert("Validation Error", "Please enter a valid duration greater than zero.");
+        const parsedDuration = Number(
+          String(learningDuration).trim()
+        );
+
+        if (
+          !learningDuration ||
+          !Number.isFinite(parsedDuration) ||
+          parsedDuration <= 0
+        ) {
+          Alert.alert(
+            "Validation Error",
+            "Please enter a valid duration greater than zero."
+          );
           return;
         }
+
         if (!learningDurationUnit) {
-          Alert.alert("Validation Error", "Please select a duration unit.");
+          Alert.alert(
+            "Validation Error",
+            "Please select a duration unit."
+          );
           return;
+        }
+
+        durationValue = parsedDuration;
+        durationUnitValue = learningDurationUnit;
+      }
+
+      // =====================================================
+      // NORMALIZE DATE
+      // Backend expects DateTime?
+      // Send yyyy-MM-dd instead of JS Date object.
+      // =====================================================
+
+      let classDateValue = null;
+
+      if (selectedClassDate) {
+        if (typeof selectedClassDate === "string") {
+          // Already yyyy-MM-dd
+          if (/^\d{4}-\d{2}-\d{2}$/.test(selectedClassDate)) {
+            classDateValue = selectedClassDate;
+          } else {
+            const parsedDate = new Date(selectedClassDate);
+
+            if (!Number.isNaN(parsedDate.getTime())) {
+              classDateValue = parsedDate
+                .toISOString()
+                .split("T")[0];
+            }
+          }
+        } else if (selectedClassDate instanceof Date) {
+          if (!Number.isNaN(selectedClassDate.getTime())) {
+            classDateValue = selectedClassDate
+              .toISOString()
+              .split("T")[0];
+          }
         }
       }
 
-      setRequestLoading(true);
-      const token = await AsyncStorage.getItem("token");
+      // If there is no selected class date,
+      // use today's date.
+      if (!classDateValue) {
+        const today = new Date();
+
+        classDateValue = today
+          .toISOString()
+          .split("T")[0];
+      }
+
+      // =====================================================
+      // REQUEST BODY
+      // =====================================================
 
       const requestBody = {
-        tutor_id: selectedTutor,
-        course_id: courseId,
-        day: selectedDay,
-        time: selectedTime,
-        class_date: selectedClassDate,
+        tutor_id: Number(selectedTutor),
+        course_id: Number(courseId),
+
+        day: String(selectedDay).trim(),
+
+        time: String(selectedTime).trim(),
+
+        class_date: classDateValue,
+
         learning_mode: learningMode,
-        learning_duration:
-          learningMode === "SpecificTime" ? Number(learningDuration) : null,
-        learning_duration_unit:
-          learningMode === "SpecificTime" ? learningDurationUnit : null,
+
+        learning_duration: durationValue,
+
+        learning_duration_unit: durationUnitValue,
       };
 
-      const response = await fetch(`${BASE_URL}/Student/create-request`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestBody),
-      });
+      console.log("====================================");
+      console.log("CREATE REQUEST");
+      console.log("URL:", `${BASE_URL}/Student/create-request`);
+      console.log("BODY:", JSON.stringify(requestBody, null, 2));
+      console.log("====================================");
 
-      const data = await response.json();
+      // =====================================================
+      // TOKEN
+      // =====================================================
+
+      const token = await AsyncStorage.getItem("token");
+
+      if (!token) {
+        Alert.alert(
+          "Authentication Error",
+          "Your login session has expired. Please login again."
+        );
+        return;
+      }
+
+      setRequestLoading(true);
+
+      // =====================================================
+      // API CALL
+      // =====================================================
+
+      const response = await fetch(
+        `${BASE_URL}/Student/create-request`,
+        {
+          method: "POST",
+
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+
+          body: JSON.stringify(requestBody),
+        }
+      );
+
+      // =====================================================
+      // READ RESPONSE SAFELY
+      // =====================================================
+
+      const responseText = await response.text();
+
+      console.log("====================================");
+      console.log("CREATE REQUEST RESPONSE");
+      console.log("STATUS:", response.status);
+      console.log("BODY:", responseText);
+      console.log("====================================");
+
+      let data = {};
+
+      try {
+        data = responseText
+          ? JSON.parse(responseText)
+          : {};
+      } catch (parseError) {
+        console.log(
+          "RESPONSE JSON PARSE ERROR:",
+          parseError
+        );
+
+        data = {
+          message: responseText || "Unknown server response.",
+        };
+      }
+
+      // =====================================================
+      // SUCCESS
+      // =====================================================
 
       if (response.ok) {
         setRequestModal(false);
+
         setSelectedTutor(null);
         setSelectedDay("");
         setSelectedTime("");
         setSelectedClassDate(null);
+
         setLearningMode("FullTime");
         setLearningDuration("");
         setLearningDurationUnit("Weeks");
 
         if (data?.tutor_unavailable === true) {
           let warningMessage =
-            data?.note || "This tutor is unavailable for the selected time.";
+            data?.note ||
+            "This tutor is unavailable for the selected slot.";
+
           if (data?.next_available_day) {
-            warningMessage += `\n\nAvailable next: ${data.next_available_day}`;
+            warningMessage +=
+              `\n\nAvailable next: ${data.next_available_day}`;
           }
+
           Alert.alert(
             "Request Sent",
             `${data?.message || "Class request created successfully."}\n\n${warningMessage}`
           );
         } else {
-          Alert.alert("Success", data?.message || "Request sent successfully.");
+          Alert.alert(
+            "Success",
+            data?.message ||
+              "Class request sent successfully."
+          );
         }
-      } else {
-        Alert.alert("Error", data?.message || "Failed to send request.");
+
+        return;
       }
+
+      // =====================================================
+      // BACKEND ERROR
+      // =====================================================
+
+      const serverMessage =
+        data?.message ||
+        data?.error ||
+        data?.title ||
+        data?.detail ||
+        `Server returned HTTP ${response.status}.`;
+
+      const innerError =
+        data?.inner_error
+          ? `\n\nDetails: ${data.inner_error}`
+          : "";
+
+      Alert.alert(
+        `Request Failed (${response.status})`,
+        `${serverMessage}${innerError}`
+      );
     } catch (error) {
-      console.log("CREATE REQUEST ERROR:", error);
-      Alert.alert("Error", error?.message || "Unable to send request.");
+      console.log("====================================");
+      console.log("CREATE REQUEST NETWORK ERROR");
+      console.log(error);
+      console.log("====================================");
+
+      Alert.alert(
+        "Request Failed",
+        error?.message ||
+          "Unable to connect to the server."
+      );
     } finally {
       setRequestLoading(false);
     }
