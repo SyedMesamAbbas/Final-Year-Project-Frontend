@@ -12,7 +12,7 @@ npm install react-native-worklets
 npm install @react-navigation/bottom-tabs
 npm install @react-navigation/drawer
 
-
+npm install @react-native-documents/picker
 
 On top there is header which contain logo image on center and on left side there is back arrow which navigate back
 
