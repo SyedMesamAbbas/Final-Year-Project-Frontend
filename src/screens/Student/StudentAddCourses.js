@@ -95,7 +95,7 @@ const StudentAddCourses = ({ navigation }) => {
         return;
       }
 
-      const res = await fetch(`${BASE_URL}/Student/my-courses`, {
+      const res = await fetch(`${BASE_URL}/Student/my-courses-for-student-add-courses`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
