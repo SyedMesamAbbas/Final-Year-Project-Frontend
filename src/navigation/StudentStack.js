@@ -11,6 +11,7 @@ import MyTutor from "../screens/Student/MyTutor"
 import Notification from "../screens/Student/Notification";
 import StudentHistory from "../screens/Student/StudentHistory"
 import StudentProfile from "../screens/Student/StudentProfile"
+import StudentFee from "../screens/Student/StudentFee"
 
 const Stack = createNativeStackNavigator();
 
@@ -27,6 +28,7 @@ const StudentDrawerNavigator = () => {
       <Stack.Screen name="Notification" component={Notification} />
       <Stack.Screen name="StudentHistory" component={StudentHistory} />
       <Stack.Screen name="StudentProfile" component={StudentProfile} />
+      <Stack.Screen name="StudentFee" component={StudentFee} />
       <Stack.Screen name="MyTutor" component={MyTutor} />
     </Stack.Navigator>
   );

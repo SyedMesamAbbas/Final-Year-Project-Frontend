@@ -164,6 +164,7 @@ CREATE TABLE Student_Course_Fee
     UNIQUE(student_id, tutor_id, course_id)
 );
 
+
 CREATE TABLE Payment
 (
     payment_id INT PRIMARY KEY IDENTITY(1,1),
@@ -260,10 +261,13 @@ Select * from Student_Course_Content
 Select * from Tutor_Course
 Select * from Tutor_Course_Rate
 Select * from Student_Course_Fee
-Select * from  Request
+Select * from Request
+Select * from Payment
 
 
-
+Update Payment set tutor_status='Pending' where fee_id=5
+Update Payment set tutor_status='Received' where fee_id=5
+update Student set fee_responsibility='ByMe' where user_id=7
 Update Student set Father_Cnic='6856886422468' where user_id=1031
 update Student set fee_responsibility='ByParent' where student_id>=1 and student_id<=30
 update Student set fee_responsibility='ByMe' where user_id=1031
@@ -276,7 +280,4 @@ update Tutor_Course set institute='BIIT' where grade='A'
 update Request set class_date='2026-09-13' where request_id=3042
 update Request set Status='Accepted' where request_id=3042
 
-
-
-
-Delete Student_Course
+Delete Student_Course where course_id=2

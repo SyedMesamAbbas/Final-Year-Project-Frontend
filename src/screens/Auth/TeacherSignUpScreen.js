@@ -75,6 +75,10 @@ const FIELD_CONFIG = [
 // ============================================================
 
 const TeacherSignUpScreen = ({ navigation }) => {
+  // ==========================================================
+  // FORM
+  // ==========================================================
+
   const [form, setForm] = useState({
     name: "",
     cnic: "",
@@ -87,16 +91,26 @@ const TeacherSignUpScreen = ({ navigation }) => {
     confirmPassword: "",
   });
 
-  // Backend expects:
+  // ==========================================================
+  // TEACHING MODE
+  //
+  // Possible values:
   // "Visiting"
   // "Non-Visiting"
+  // ==========================================================
+
   const [teachingMode, setTeachingMode] = useState("");
 
-  // Cosmetic only
+  // ==========================================================
+  // OTHER STATES
+  // ==========================================================
+
   const [focusedField, setFocusedField] = useState(null);
 
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState(false);
 
   const [submitting, setSubmitting] = useState(false);
 
@@ -112,98 +126,386 @@ const TeacherSignUpScreen = ({ navigation }) => {
   };
 
   // ============================================================
+  // HANDLE TEACHING MODE
+  // ============================================================
+
+  const handleTeachingModeChange = (mode) => {
+    setTeachingMode(mode);
+
+    // ==========================================================
+    // NON-VISITING
+    //
+    // Radius is not required.
+    // Clear radius when Non-Visiting is selected.
+    // ==========================================================
+
+    if (mode === "Non-Visiting") {
+      setForm((prev) => ({
+        ...prev,
+        radius: "",
+      }));
+    }
+  };
+
+  // ============================================================
   // HANDLE REGISTER
   // ============================================================
 
   const handleSubmit = async () => {
-     if ( !form.name.trim() || !form.cnic.trim() || !form.phone.trim() || !form.email.trim() || !form.password || !form.qualification.trim() )
-       {
-         Alert.alert( "Error", "Please fill all required fields." ); 
-         return; }
-          if ( teachingMode !== "Visiting" && teachingMode !== "Non-Visiting" ) 
-            { Alert.alert( "Error", "Please select Type: Visiting or Non-Visiting." );
-               return; } 
-               if (form.password !== form.confirmPassword) 
-                { Alert.alert( "Error", "Passwords do not match." ); 
-                  return; } 
-                  if (submitting) { return; } setSubmitting(true);
-                   const requestBody = 
-                   {
-                     fullName: form.name.trim(), 
-                     cnic: form.cnic.trim(), 
-                     phone: form.phone.trim(), 
-                     email: form.email.trim().toLowerCase(), 
-                     qualification: form.qualification.trim(), 
-                     radius: parseInt(form.radius, 10) || 0, 
-                     experience: parseInt(form.experience, 10) || 0,
-                     password: form.password, role: "Tutor", 
-                     teachingMode: teachingMode, 
-                    }; 
-                    console.log( "=================================" ); 
-                    console.log( "TUTOR REGISTER REQUEST:" ); 
-                    console.log( JSON.stringify( requestBody, null, 2 ) );
-                    console.log( "REGISTER URL:", `${BASE_URL}/Auth/register` ); 
-                    console.log( "=================================" ); 
-                    try 
-                    {
-                      const response = await axios.post
-                      ( `${BASE_URL}/Auth/register`, 
-                        requestBody, 
-                        { 
-                          headers: 
-                          { "Content-Type": "application/json", 
-                            Accept: "application/json", 
-                          }, 
-                          timeout: 15000, 
-                        } 
-                      );
-                      console.log( "=================================" ); 
-                      console.log( "TUTOR REGISTER RESPONSE:" ); 
-                      console.log( JSON.stringify( response.data, null, 2 ) ); 
-                      console.log( "=================================" ); 
-                      const userId = response.data?.userId; 
-                      if (!userId) 
-                      {
-                        Alert.alert( "Error", "Registration succeeded but UserId was not received." ); 
-                        return; 
-                      }
-                      Alert.alert( "Success", "Account created successfully! Now select your location.", [ { text: "OK", onPress: () => { navigation.navigate( "Map", { userId: Number(userId), } ); }, }, ] ); 
-                    } catch (error) 
-                    { 
-                      console.log( "=================================" ); 
-                      console.log( "TUTOR REGISTER ERROR:" ); 
-                      console.log( "Status:", error.response?.status ); 
-                      console.log( "Data:", error.response?.data ); 
-                      console.log( "Message:", error.message ); 
-                      console.log( "=================================" );
-                     let errorMessage = "Registration failed."; 
-                     if (error.response?.data) 
-                      {
-                         const data = error.response.data; 
-                         if (typeof data === "string") 
-                          {
-                             errorMessage = data; 
-                          } else if (data.message) 
-                            {
-                               errorMessage = data.message; 
-                            } else if (data.title) 
-                              { 
-                                errorMessage = data.title; 
-                              } else if (data.errors) 
-                                {
-                                   errorMessage = JSON.stringify( data.errors ); 
-                                }
-                        } else if (error.message) 
-                          {
-                             errorMessage = error.message; 
-                          } 
-                          Alert.alert( "Registration Failed", errorMessage ); 
-            } 
-            finally 
-            {
-               setSubmitting(false); 
-              } 
+    // ==========================================================
+    // STEP 1: BASIC REQUIRED FIELDS
+    // ==========================================================
+
+    if (
+      !form.name.trim() ||
+      !form.cnic.trim() ||
+      !form.phone.trim() ||
+      !form.email.trim() ||
+      !form.password ||
+      !form.qualification.trim()
+    ) {
+      Alert.alert(
+        "Error",
+        "Please fill all required fields."
+      );
+      return;
+    }
+
+    // ==========================================================
+    // STEP 2: TEACHING MODE REQUIRED
+    // ==========================================================
+
+    if (
+      teachingMode !== "Visiting" &&
+      teachingMode !== "Non-Visiting"
+    ) {
+      Alert.alert(
+        "Error",
+        "Please select Type: Visiting or Non-Visiting."
+      );
+      return;
+    }
+
+    // ==========================================================
+    // STEP 3: RADIUS VALIDATION
+    //
+    // Visiting:
+    //     Radius is REQUIRED
+    //
+    // Non-Visiting:
+    //     Radius is NOT REQUIRED
+    // ==========================================================
+
+    if (teachingMode === "Visiting") {
+      if (!form.radius.trim()) {
+        Alert.alert(
+          "Error",
+          "Radius is required for Visiting tutors."
+        );
+        return;
+      }
+
+      const radiusValue = Number(form.radius);
+
+      if (isNaN(radiusValue) || radiusValue <= 0) {
+        Alert.alert(
+          "Error",
+          "Please enter a valid radius greater than 0."
+        );
+        return;
+      }
+    }
+
+    // ==========================================================
+    // STEP 4: PASSWORD CHECK
+    // ==========================================================
+
+    if (form.password !== form.confirmPassword) {
+      Alert.alert(
+        "Error",
+        "Passwords do not match."
+      );
+      return;
+    }
+
+    // ==========================================================
+    // STEP 5: PREVENT DOUBLE SUBMIT
+    // ==========================================================
+
+    if (submitting) {
+      return;
+    }
+
+    setSubmitting(true);
+
+    // ==========================================================
+    // STEP 6: PREPARE RADIUS
+    //
+    // Visiting:
+    //     Send actual number
+    //
+    // Non-Visiting:
+    //     Send null
+    // ==========================================================
+
+    let radiusValue = null;
+
+    if (teachingMode === "Visiting") {
+      radiusValue = Number(form.radius);
+    }
+
+    // ==========================================================
+    // STEP 7: PREPARE EXPERIENCE
+    // ==========================================================
+
+    let experienceValue = 0;
+
+    if (form.experience.trim()) {
+      experienceValue = Number(form.experience);
+
+      if (isNaN(experienceValue) || experienceValue < 0) {
+        Alert.alert(
+          "Error",
+          "Please enter a valid experience."
+        );
+
+        setSubmitting(false);
+        return;
+      }
+    }
+
+    // ==========================================================
+    // STEP 8: REQUEST BODY
+    // ==========================================================
+
+    const requestBody = {
+      fullName: form.name.trim(),
+
+      cnic: form.cnic.trim(),
+
+      phone: form.phone.trim(),
+
+      email: form.email.trim().toLowerCase(),
+
+      qualification: form.qualification.trim(),
+
+      // Visiting -> number
+      // Non-Visiting -> null
+      radius: radiusValue,
+
+      experience: experienceValue,
+
+      password: form.password,
+
+      role: "Tutor",
+
+      teachingMode: teachingMode,
     };
+
+    // ==========================================================
+    // DEBUG LOG
+    // ==========================================================
+
+    console.log("=================================");
+    console.log("TUTOR REGISTER REQUEST:");
+    console.log(
+      JSON.stringify(
+        requestBody,
+        null,
+        2
+      )
+    );
+
+    console.log(
+      "REGISTER URL:",
+      `${BASE_URL}/Auth/register`
+    );
+
+    console.log(
+      "TEACHING MODE:",
+      teachingMode
+    );
+
+    console.log(
+      "RADIUS:",
+      radiusValue
+    );
+
+    console.log("=================================");
+
+    // ==========================================================
+    // STEP 9: API CALL
+    // ==========================================================
+
+    try {
+      const response = await axios.post(
+        `${BASE_URL}/Auth/register`,
+        requestBody,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+
+          timeout: 15000,
+        }
+      );
+
+      // ========================================================
+      // RESPONSE LOG
+      // ========================================================
+
+      console.log("=================================");
+      console.log("TUTOR REGISTER RESPONSE:");
+
+      console.log(
+        JSON.stringify(
+          response.data,
+          null,
+          2
+        )
+      );
+
+      console.log("=================================");
+
+      // ========================================================
+      // STEP 10: GET USER ID
+      // ========================================================
+
+      const userId = response.data?.userId;
+
+      if (!userId) {
+        Alert.alert(
+          "Error",
+          "Registration succeeded but UserId was not received."
+        );
+
+        return;
+      }
+
+      // ========================================================
+      // STEP 11: POST-REGISTRATION NAVIGATION
+      //
+      // Visiting:
+      //     Map
+      //
+      // Non-Visiting:
+      //     Login
+      // ========================================================
+
+      if (teachingMode === "Visiting") {
+        // ======================================================
+        // VISITING TUTOR
+        //
+        // Tutor must select location.
+        // Send userId to Map screen.
+        // ======================================================
+
+        Alert.alert(
+          "Success",
+          "Account created successfully! Now select your location.",
+          [
+            {
+              text: "OK",
+
+              onPress: () => {
+                navigation.navigate(
+                  "Map",
+                  {
+                    userId: Number(userId),
+                  }
+                );
+              },
+            },
+          ]
+        );
+      } else {
+        // ======================================================
+        // NON-VISITING TUTOR
+        //
+        // No location required.
+        // Go directly to Login.
+        // ======================================================
+
+        Alert.alert(
+          "Success",
+          "Account created successfully! Please login to continue.",
+          [
+            {
+              text: "OK",
+
+              onPress: () => {
+                navigation.navigate("Login");
+              },
+            },
+          ]
+        );
+      }
+    } catch (error) {
+      // ========================================================
+      // ERROR LOG
+      // ========================================================
+
+      console.log("=================================");
+      console.log("TUTOR REGISTER ERROR:");
+
+      console.log(
+        "Status:",
+        error.response?.status
+      );
+
+      console.log(
+        "Data:",
+        error.response?.data
+      );
+
+      console.log(
+        "Message:",
+        error.message
+      );
+
+      console.log("=================================");
+
+      // ========================================================
+      // ERROR MESSAGE
+      // ========================================================
+
+      let errorMessage =
+        "Registration failed.";
+
+      if (error.response?.data) {
+        const data =
+          error.response.data;
+
+        if (typeof data === "string") {
+          errorMessage = data;
+        } else if (data.message) {
+          errorMessage = data.message;
+        } else if (data.title) {
+          errorMessage = data.title;
+        } else if (data.errors) {
+          errorMessage =
+            JSON.stringify(
+              data.errors
+            );
+        }
+      } else if (error.message) {
+        errorMessage =
+          error.message;
+      }
+
+      Alert.alert(
+        "Registration Failed",
+        errorMessage
+      );
+    } finally {
+      // ========================================================
+      // STOP LOADING
+      // ========================================================
+
+      setSubmitting(false);
+    }
+  };
 
   // ============================================================
   // RENDER TEXT FIELD
@@ -218,13 +520,20 @@ const TeacherSignUpScreen = ({ navigation }) => {
     toggleSecure,
     secureVisible,
   }) => (
-    <View key={key} style={styles.fieldGroup}>
-      <Text style={styles.label}>{placeholder}</Text>
+    <View
+      key={key}
+      style={styles.fieldGroup}
+    >
+      <Text style={styles.label}>
+        {placeholder}
+      </Text>
 
       <View
         style={[
           styles.inputContainer,
-          focusedField === key && styles.inputContainerFocused,
+
+          focusedField === key &&
+            styles.inputContainerFocused,
         ]}
       >
         <Icon
@@ -242,26 +551,45 @@ const TeacherSignUpScreen = ({ navigation }) => {
           placeholder={placeholder}
           placeholderTextColor="#A0A4AB"
           style={styles.input}
-          keyboardType={keyboardType || "default"}
-          secureTextEntry={secure && !secureVisible}
+          keyboardType={
+            keyboardType || "default"
+          }
+          secureTextEntry={
+            secure &&
+            !secureVisible
+          }
           value={form[key]}
-          onChangeText={(value) => handleChange(key, value)}
-          onFocus={() => setFocusedField(key)}
+          onChangeText={(value) =>
+            handleChange(
+              key,
+              value
+            )
+          }
+          onFocus={() =>
+            setFocusedField(key)
+          }
           onBlur={() =>
-            setFocusedField((prev) =>
-              prev === key ? null : prev
+            setFocusedField(
+              (prev) =>
+                prev === key
+                  ? null
+                  : prev
             )
           }
           returnKeyType="next"
           autoCorrect={false}
           autoCapitalize={
-            key === "email" ? "none" : "sentences"
+            key === "email"
+              ? "none"
+              : "sentences"
           }
           {...(secure
             ? {
                 autoComplete: "off",
-                importantForAutofill: "no",
-                textContentType: "oneTimeCode",
+                importantForAutofill:
+                  "no",
+                textContentType:
+                  "oneTimeCode",
               }
             : {})}
         />
@@ -292,7 +620,10 @@ const TeacherSignUpScreen = ({ navigation }) => {
   );
 
   // ============================================================
-  // TEACHING MODE TOGGLE
+  // TEACHING MODE / TYPE
+  //
+  // IMPORTANT:
+  // Type is now ABOVE Teaching Details.
   // ============================================================
 
   const renderTeachingMode = () => (
@@ -306,6 +637,7 @@ const TeacherSignUpScreen = ({ navigation }) => {
       </Text>
 
       <View style={styles.modeContainer}>
+
         {/* ====================================================
             VISITING
         ==================================================== */}
@@ -313,20 +645,27 @@ const TeacherSignUpScreen = ({ navigation }) => {
         <TouchableOpacity
           style={[
             styles.modeOption,
+
             teachingMode === "Visiting" &&
               styles.modeOptionSelected,
           ]}
-          onPress={() => setTeachingMode("Visiting")}
+          onPress={() =>
+            handleTeachingModeChange(
+              "Visiting"
+            )
+          }
           activeOpacity={0.85}
         >
           <View
             style={[
               styles.checkbox,
+
               teachingMode === "Visiting" &&
                 styles.checkboxSelected,
             ]}
           >
-            {teachingMode === "Visiting" && (
+            {teachingMode ===
+              "Visiting" && (
               <Icon
                 name="checkmark"
                 size={17}
@@ -335,19 +674,28 @@ const TeacherSignUpScreen = ({ navigation }) => {
             )}
           </View>
 
-          <View style={styles.modeTextContainer}>
+          <View
+            style={styles.modeTextContainer}
+          >
             <Text
               style={[
                 styles.modeText,
-                teachingMode === "Visiting" &&
+
+                teachingMode ===
+                  "Visiting" &&
                   styles.modeTextSelected,
               ]}
             >
               Visiting
             </Text>
 
-            <Text style={styles.modeDescription}>
-              Tutor visits the student's location
+            <Text
+              style={
+                styles.modeDescription
+              }
+            >
+              Tutor visits the student's
+              location
             </Text>
           </View>
         </TouchableOpacity>
@@ -359,20 +707,29 @@ const TeacherSignUpScreen = ({ navigation }) => {
         <TouchableOpacity
           style={[
             styles.modeOption,
-            teachingMode === "Non-Visiting" &&
+
+            teachingMode ===
+              "Non-Visiting" &&
               styles.modeOptionSelected,
           ]}
-          onPress={() => setTeachingMode("Non-Visiting")}
+          onPress={() =>
+            handleTeachingModeChange(
+              "Non-Visiting"
+            )
+          }
           activeOpacity={0.85}
         >
           <View
             style={[
               styles.checkbox,
-              teachingMode === "Non-Visiting" &&
+
+              teachingMode ===
+                "Non-Visiting" &&
                 styles.checkboxSelected,
             ]}
           >
-            {teachingMode === "Non-Visiting" && (
+            {teachingMode ===
+              "Non-Visiting" && (
               <Icon
                 name="checkmark"
                 size={17}
@@ -381,19 +738,28 @@ const TeacherSignUpScreen = ({ navigation }) => {
             )}
           </View>
 
-          <View style={styles.modeTextContainer}>
+          <View
+            style={styles.modeTextContainer}
+          >
             <Text
               style={[
                 styles.modeText,
-                teachingMode === "Non-Visiting" &&
+
+                teachingMode ===
+                  "Non-Visiting" &&
                   styles.modeTextSelected,
               ]}
             >
               Non-Visiting
             </Text>
 
-            <Text style={styles.modeDescription}>
-              Student attends the tutor's location
+            <Text
+              style={
+                styles.modeDescription
+              }
+            >
+              Student attends the tutor's
+              location
             </Text>
           </View>
         </TouchableOpacity>
@@ -406,7 +772,9 @@ const TeacherSignUpScreen = ({ navigation }) => {
   // ============================================================
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={styles.container}
+    >
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={
@@ -416,17 +784,24 @@ const TeacherSignUpScreen = ({ navigation }) => {
         }
       >
         <ScrollView
-          contentContainerStyle={styles.inner}
+          contentContainerStyle={
+            styles.inner
+          }
           keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator={
+            false
+          }
         >
+
           {/* ==================================================
               HEADER
           ================================================== */}
 
           <View style={styles.header}>
             <Image
-              source={require("../../../assets/images/logo.png")}
+              source={require(
+                "../../../assets/images/logo.png"
+              )}
               style={styles.logo}
               resizeMode="contain"
             />
@@ -436,8 +811,8 @@ const TeacherSignUpScreen = ({ navigation }) => {
             </Text>
 
             <Text style={styles.subtitle}>
-              Set up your profile to start teaching on the
-              platform
+              Set up your profile to start
+              teaching on the platform
             </Text>
           </View>
 
@@ -446,76 +821,162 @@ const TeacherSignUpScreen = ({ navigation }) => {
           ================================================== */}
 
           <View style={styles.card}>
+
             {/* =================================================
                 PERSONAL DETAILS
             ================================================= */}
 
-            <Text style={styles.sectionLabel}>
+            <Text
+              style={styles.sectionLabel}
+            >
               Personal Details
             </Text>
 
-            {renderField(FIELD_CONFIG[0])}
-            {renderField(FIELD_CONFIG[1])}
-            {renderField(FIELD_CONFIG[2])}
-            {renderField(FIELD_CONFIG[3])}
+            {renderField(
+              FIELD_CONFIG[0]
+            )}
+
+            {renderField(
+              FIELD_CONFIG[1]
+            )}
+
+            {renderField(
+              FIELD_CONFIG[2]
+            )}
+
+            {renderField(
+              FIELD_CONFIG[3]
+            )}
+
+            {/* =================================================
+                TYPE
+                IMPORTANT:
+                Type is ABOVE Teaching Details
+            ================================================= */}
+
+            <View
+              style={styles.divider}
+            />
+
+            {renderTeachingMode()}
 
             {/* =================================================
                 TEACHING DETAILS
             ================================================= */}
 
-            <View style={styles.divider} />
+            <View
+              style={styles.divider}
+            />
 
-            <Text style={styles.sectionLabel}>
+            <Text
+              style={styles.sectionLabel}
+            >
               Teaching Details
             </Text>
 
-            {renderField(FIELD_CONFIG[4])}
-
-            <View style={styles.row}>
-              <View style={styles.halfField}>
-                {renderField(FIELD_CONFIG[5])}
-              </View>
-
-              <View style={styles.halfField}>
-                {renderField(FIELD_CONFIG[6])}
-              </View>
-            </View>
-
             {/* =================================================
-                TYPE TOGGLE
+                QUALIFICATION
             ================================================= */}
 
-            {renderTeachingMode()}
+            {renderField(
+              FIELD_CONFIG[4]
+            )}
+
+            {/* =================================================
+                RADIUS + EXPERIENCE
+            ================================================= */}
+
+            <View style={styles.row}>
+
+              {/* =================================================
+                  RADIUS
+
+                  Show ONLY for Visiting.
+              ================================================= */}
+
+              {teachingMode ===
+                "Visiting" && (
+                <View
+                  style={styles.halfField}
+                >
+                  {renderField(
+                    FIELD_CONFIG[5]
+                  )}
+                </View>
+              )}
+
+              {/* =================================================
+                  EXPERIENCE
+
+                  Visiting:
+                      Half width
+
+                  Non-Visiting:
+                      Full width
+              ================================================= */}
+
+              <View
+                style={
+                  teachingMode ===
+                  "Visiting"
+                    ? styles.halfField
+                    : styles.fullField
+                }
+              >
+                {renderField(
+                  FIELD_CONFIG[6]
+                )}
+              </View>
+            </View>
 
             {/* =================================================
                 SECURITY
             ================================================= */}
 
-            <View style={styles.divider} />
+            <View
+              style={styles.divider}
+            />
 
-            <Text style={styles.sectionLabel}>
+            <Text
+              style={styles.sectionLabel}
+            >
               Security
             </Text>
+
+            {/* =================================================
+                PASSWORD
+            ================================================= */}
 
             {renderField({
               key: "password",
               placeholder: "Password",
               icon: "lock-closed-outline",
               secure: true,
-              secureVisible: showPassword,
+              secureVisible:
+                showPassword,
               toggleSecure: () =>
-                setShowPassword((value) => !value),
+                setShowPassword(
+                  (value) =>
+                    !value
+                ),
             })}
+
+            {/* =================================================
+                CONFIRM PASSWORD
+            ================================================= */}
 
             {renderField({
               key: "confirmPassword",
-              placeholder: "Confirm Password",
+              placeholder:
+                "Confirm Password",
               icon: "lock-closed-outline",
               secure: true,
-              secureVisible: showConfirmPassword,
+              secureVisible:
+                showConfirmPassword,
               toggleSecure: () =>
                 setShowConfirmPassword(
-                  (value) => !value
+                  (value) =>
+                    !value
                 ),
             })}
 
@@ -526,6 +987,7 @@ const TeacherSignUpScreen = ({ navigation }) => {
             <TouchableOpacity
               style={[
                 styles.submitButton,
+
                 submitting &&
                   styles.submitButtonDisabled,
               ]}
@@ -534,9 +996,15 @@ const TeacherSignUpScreen = ({ navigation }) => {
               activeOpacity={0.85}
             >
               {submitting ? (
-                <ActivityIndicator color="#FFFFFF" />
+                <ActivityIndicator
+                  color="#FFFFFF"
+                />
               ) : (
-                <Text style={styles.submitButtonText}>
+                <Text
+                  style={
+                    styles.submitButtonText
+                  }
+                >
                   Register
                 </Text>
               )}
@@ -548,7 +1016,9 @@ const TeacherSignUpScreen = ({ navigation }) => {
 
             <TouchableOpacity
               onPress={() =>
-                navigation.navigate("Login")
+                navigation.navigate(
+                  "Login"
+                )
               }
               style={styles.loginRow}
               hitSlop={{
@@ -558,13 +1028,20 @@ const TeacherSignUpScreen = ({ navigation }) => {
                 right: 8,
               }}
             >
-              <Text style={styles.loginText}>
+              <Text
+                style={styles.loginText}
+              >
                 Already have an account?{" "}
-                <Text style={styles.loginTextBold}>
+                <Text
+                  style={
+                    styles.loginTextBold
+                  }
+                >
                   Log in
                 </Text>
               </Text>
             </TouchableOpacity>
+
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -578,19 +1055,26 @@ export default TeacherSignUpScreen;
 // STYLES
 // ============================================================
 
-const CARD_MAX_WIDTH = isTablet ? 520 : undefined;
+const CARD_MAX_WIDTH =
+  isTablet ? 520 : undefined;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+
     backgroundColor:
-      colors.background || "#F5F6FA",
+      colors.background ||
+      "#F5F6FA",
   },
 
   inner: {
-    paddingHorizontal: isTablet ? 32 : 20,
+    paddingHorizontal:
+      isTablet ? 32 : 20,
+
     paddingTop: 24,
+
     paddingBottom: 40,
+
     alignItems: "center",
   },
 
@@ -600,31 +1084,46 @@ const styles = StyleSheet.create({
 
   header: {
     alignItems: "center",
+
     marginBottom: 24,
+
     width: "100%",
-    maxWidth: CARD_MAX_WIDTH,
+
+    maxWidth:
+      CARD_MAX_WIDTH,
   },
 
   logo: {
     width: 84,
+
     height: 84,
+
     marginBottom: 12,
   },
 
   title: {
     fontSize: 24,
+
     fontWeight: "700",
+
     color: "#1A1D29",
+
     textAlign: "center",
+
     letterSpacing: -0.3,
   },
 
   subtitle: {
     fontSize: 14,
+
     color: "#6B7280",
+
     textAlign: "center",
+
     marginTop: 6,
+
     paddingHorizontal: 16,
+
     lineHeight: 20,
   },
 
@@ -634,18 +1133,30 @@ const styles = StyleSheet.create({
 
   card: {
     width: "100%",
-    maxWidth: CARD_MAX_WIDTH,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    padding: isTablet ? 28 : 20,
 
-    shadowColor: "#1A1D29",
+    maxWidth:
+      CARD_MAX_WIDTH,
+
+    backgroundColor:
+      "#FFFFFF",
+
+    borderRadius: 18,
+
+    padding:
+      isTablet ? 28 : 20,
+
+    shadowColor:
+      "#1A1D29",
+
     shadowOffset: {
       width: 0,
       height: 4,
     },
+
     shadowOpacity: 0.06,
+
     shadowRadius: 16,
+
     elevation: 3,
   },
 
@@ -655,17 +1166,28 @@ const styles = StyleSheet.create({
 
   sectionLabel: {
     fontSize: 12,
+
     fontWeight: "700",
-    color: colors.primary,
-    textTransform: "uppercase",
+
+    color:
+      colors.primary,
+
+    textTransform:
+      "uppercase",
+
     letterSpacing: 0.6,
+
     marginBottom: 12,
+
     marginTop: 4,
   },
 
   divider: {
     height: 1,
-    backgroundColor: "#EEF0F3",
+
+    backgroundColor:
+      "#EEF0F3",
+
     marginVertical: 18,
   },
 
@@ -679,25 +1201,42 @@ const styles = StyleSheet.create({
 
   label: {
     fontSize: 12.5,
+
     fontWeight: "600",
+
     color: "#4B5563",
+
     marginBottom: 6,
+
     marginLeft: 2,
   },
 
   inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F9FAFB",
+    flexDirection:
+      "row",
+
+    alignItems:
+      "center",
+
+    backgroundColor:
+      "#F9FAFB",
+
     borderRadius: 12,
+
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+
+    borderColor:
+      "#E5E7EB",
+
     paddingHorizontal: 14,
   },
 
   inputContainerFocused: {
-    borderColor: colors.primary,
-    backgroundColor: "#FFFFFF",
+    borderColor:
+      colors.primary,
+
+    backgroundColor:
+      "#FFFFFF",
   },
 
   inputIcon: {
@@ -706,8 +1245,11 @@ const styles = StyleSheet.create({
 
   input: {
     flex: 1,
+
     height: 46,
+
     fontSize: 15,
+
     color: "#1A1D29",
   },
 
@@ -716,7 +1258,9 @@ const styles = StyleSheet.create({
   // ==========================================================
 
   row: {
-    flexDirection: "row",
+    flexDirection:
+      "row",
+
     gap: 12,
   },
 
@@ -725,24 +1269,40 @@ const styles = StyleSheet.create({
   },
 
   // ==========================================================
-  // TEACHING MODE
+  // FULL FIELD
+  // ==========================================================
+
+  fullField: {
+    flex: 1,
+
+    width: "100%",
+  },
+
+  // ==========================================================
+  // TEACHING MODE / TYPE
   // ==========================================================
 
   modeSection: {
     marginTop: 4,
+
     marginBottom: 4,
   },
 
   modeTitle: {
     fontSize: 13,
+
     fontWeight: "700",
+
     color: "#4B5563",
+
     marginBottom: 3,
   },
 
   modeSubtitle: {
     fontSize: 12,
+
     color: "#8A9099",
+
     marginBottom: 10,
   },
 
@@ -751,42 +1311,64 @@ const styles = StyleSheet.create({
   },
 
   modeOption: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection:
+      "row",
+
+    alignItems:
+      "center",
+
     minHeight: 62,
+
     paddingHorizontal: 13,
+
     paddingVertical: 10,
 
-    backgroundColor: "#F9FAFB",
+    backgroundColor:
+      "#F9FAFB",
 
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+
+    borderColor:
+      "#E5E7EB",
 
     borderRadius: 12,
   },
 
   modeOptionSelected: {
-    borderColor: colors.primary,
-    backgroundColor: "#F2FBF9",
+    borderColor:
+      colors.primary,
+
+    backgroundColor:
+      "#F2FBF9",
   },
 
   checkbox: {
     width: 23,
+
     height: 23,
+
     borderRadius: 6,
 
     borderWidth: 1.5,
-    borderColor: "#C7CBD1",
 
-    alignItems: "center",
-    justifyContent: "center",
+    borderColor:
+      "#C7CBD1",
+
+    alignItems:
+      "center",
+
+    justifyContent:
+      "center",
 
     marginRight: 11,
   },
 
   checkboxSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor:
+      colors.primary,
+
+    borderColor:
+      colors.primary,
   },
 
   modeTextContainer: {
@@ -795,17 +1377,22 @@ const styles = StyleSheet.create({
 
   modeText: {
     fontSize: 14.5,
+
     fontWeight: "700",
+
     color: "#374151",
   },
 
   modeTextSelected: {
-    color: colors.primary,
+    color:
+      colors.primary,
   },
 
   modeDescription: {
     fontSize: 11.5,
+
     color: "#8A9099",
+
     marginTop: 2,
   },
 
@@ -814,22 +1401,33 @@ const styles = StyleSheet.create({
   // ==========================================================
 
   submitButton: {
-    backgroundColor: colors.primary,
+    backgroundColor:
+      colors.primary,
+
     borderRadius: 12,
+
     height: 50,
 
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems:
+      "center",
+
+    justifyContent:
+      "center",
 
     marginTop: 10,
 
-    shadowColor: colors.primary,
+    shadowColor:
+      colors.primary,
+
     shadowOffset: {
       width: 0,
       height: 4,
     },
+
     shadowOpacity: 0.25,
+
     shadowRadius: 10,
+
     elevation: 2,
   },
 
@@ -839,8 +1437,11 @@ const styles = StyleSheet.create({
 
   submitButtonText: {
     color: "#FFFFFF",
+
     fontSize: 16,
+
     fontWeight: "700",
+
     letterSpacing: 0.2,
   },
 
@@ -850,20 +1451,24 @@ const styles = StyleSheet.create({
 
   loginRow: {
     marginTop: 18,
-    alignItems: "center",
+
+    alignItems:
+      "center",
   },
 
   loginText: {
     fontSize: 14,
+
     color: "#6B7280",
   },
 
   loginTextBold: {
-    color: colors.primary,
+    color:
+      colors.primary,
+
     fontWeight: "700",
   },
 });
-
 
 
 

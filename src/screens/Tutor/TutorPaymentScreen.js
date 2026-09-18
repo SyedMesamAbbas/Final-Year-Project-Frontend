@@ -20,42 +20,124 @@ import colors from "../utils/colors";
 import { BASE_URL } from "../../config/api";
 
 export default function TutorPaymentScreen({ navigation }) {
+  // =========================================================
+  // STATES
+  // =========================================================
+
+  // Payment records returned by backend
   const [payments, setPayments] = useState([]);
+
+  // Total collected returned separately by backend
+  const [totalCollected, setTotalCollected] = useState(0);
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+
+  // =========================================================
+  // LOAD PAYMENTS WHEN SCREEN OPENS
+  // =========================================================
 
   useEffect(() => {
     loadPayments();
   }, []);
 
+
+  // =========================================================
+  // LOAD PAYMENT LIST
+  // =========================================================
+
   const loadPayments = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
 
-      const res = await axios.get(`${BASE_URL}/Tutor/payment-list`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      if (!token) {
+        Alert.alert("Error", "Login token not found.");
+        return;
+      }
 
-      setPayments(res.data || []);
+      const res = await axios.get(
+        `${BASE_URL}/Tutor/payment-list`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+
+      // =====================================================
+      // BACKEND RESPONSE
+      //
+      // {
+      //   payments: [...],
+      //   totalCollected: 15000
+      // }
+      // =====================================================
+
+      console.log("Payment API Response:", res.data);
+
+
+      // =====================================================
+      // SET PAYMENT LIST
+      //
+      // Backend already removes Received payments.
+      // =====================================================
+
+      setPayments(res.data?.payments || []);
+
+
+      // =====================================================
+      // SET TOTAL COLLECTED
+      //
+      // This value comes directly from backend.
+      // Do NOT calculate it from payments.
+      // =====================================================
+
+      setTotalCollected(
+        Number(res.data?.totalCollected || 0)
+      );
+
     } catch (error) {
-      console.log(error);
-      Alert.alert("Error", "Unable to load payments.");
+      console.log(
+        "Payment List Error:",
+        error.response?.data || error.message
+      );
+
+      Alert.alert(
+        "Error",
+        error.response?.data?.message ||
+          "Unable to load payments."
+      );
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
+
+  // =========================================================
+  // REFRESH
+  // =========================================================
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     loadPayments();
   }, []);
 
+
+  // =========================================================
+  // UPDATE PAYMENT STATUS
+  // =========================================================
+
   const updateStatus = async (paymentId, status) => {
     try {
       const token = await AsyncStorage.getItem("token");
+
+      if (!token) {
+        Alert.alert("Error", "Login token not found.");
+        return;
+      }
 
       await axios.put(
         `${BASE_URL}/Tutor/payment-status`,
@@ -70,265 +152,615 @@ export default function TutorPaymentScreen({ navigation }) {
         }
       );
 
-      Alert.alert("Success", "Payment status updated.");
+      Alert.alert(
+        "Success",
+        "Payment status updated."
+      );
+
+      // Reload list and total collected
       loadPayments();
+
     } catch (error) {
-      console.log(error.response?.data);
-      Alert.alert("Error", "Unable to update payment.");
+      console.log(
+        "Update Payment Error:",
+        error.response?.data || error.message
+      );
+
+      Alert.alert(
+        "Error",
+        error.response?.data?.message ||
+          "Unable to update payment."
+      );
     }
   };
 
-  // =========================================
-  // CALCULATE SUMMARY METRICS
-  // =========================================
+
+  // =========================================================
+  // SUMMARY METRICS
+  // =========================================================
+  //
+  // IMPORTANT:
+  //
+  // totalCollected comes from backend.
+  //
+  // payments only contains payments where:
+  //
+  // TutorStatus != "Received"
+  //
+  // Therefore we should NOT calculate totalReceived
+  // from payments.
+  // =========================================================
+
   const metrics = useMemo(() => {
-    let totalReceived = 0;
     let totalPending = 0;
-    let countReceived = 0;
 
     payments.forEach((p) => {
       const amount = Number(p.amount) || 0;
-      if (p.tutorStatus === "Received") {
-        totalReceived += amount;
-        countReceived += 1;
-      } else {
-        totalPending += amount;
-      }
+
+      totalPending += amount;
     });
 
     return {
-      totalReceived,
-      totalPending,
-      countReceived,
+      totalCollected: totalCollected,
+      totalPending: totalPending,
       totalCount: payments.length,
     };
-  }, [payments]);
+  }, [payments, totalCollected]);
 
-  // =========================================
-  // HELPER COMPONENTS
-  // =========================================
-  const InfoRow = ({ icon, iconColor, label, value }) => (
+
+  // =========================================================
+  // INFO ROW COMPONENT
+  // =========================================================
+
+  const InfoRow = ({
+    icon,
+    iconColor,
+    label,
+    value,
+  }) => (
     <View style={styles.infoRow}>
-      <View style={[styles.iconWrap, { backgroundColor: `${iconColor}15` }]}>
-        <Icon name={icon} size={16} color={iconColor} />
+
+      <View
+        style={[
+          styles.iconWrap,
+          {
+            backgroundColor: `${iconColor}15`,
+          },
+        ]}
+      >
+        <Icon
+          name={icon}
+          size={16}
+          color={iconColor}
+        />
       </View>
-      <Text style={styles.infoLabel}>{label}</Text>
-      <Text style={styles.infoValue} numberOfLines={1}>
-        {value}
+
+      <Text style={styles.infoLabel}>
+        {label}
       </Text>
+
+      <Text
+        style={styles.infoValue}
+        numberOfLines={1}
+      >
+        {value || "-"}
+      </Text>
+
     </View>
   );
 
-  const StatusPill = ({ text, positive }) => (
+
+  // =========================================================
+  // STATUS PILL COMPONENT
+  // =========================================================
+
+  const StatusPill = ({
+    text,
+    positive,
+  }) => (
     <View
       style={[
         styles.pill,
         {
-          backgroundColor: positive ? "#ECFDF5" : "#FEF2F2",
-          borderColor: positive ? "#A7F3D0" : "#FCA5A5",
+          backgroundColor: positive
+            ? "#ECFDF5"
+            : "#FEF2F2",
+
+          borderColor: positive
+            ? "#A7F3D0"
+            : "#FCA5A5",
         },
       ]}
     >
+
       <View
         style={[
           styles.pillDot,
-          { backgroundColor: positive ? "#10B981" : "#EF4444" },
+          {
+            backgroundColor: positive
+              ? "#10B981"
+              : "#EF4444",
+          },
         ]}
       />
+
       <Text
         style={[
           styles.pillText,
-          { color: positive ? "#047857" : "#B91C1C" },
+          {
+            color: positive
+              ? "#047857"
+              : "#B91C1C",
+          },
         ]}
       >
-        {text}
+        {text || "Pending"}
       </Text>
+
     </View>
   );
 
+
+  // =========================================================
+  // RENDER PAYMENT CARD
+  // =========================================================
+
   const renderItem = ({ item }) => (
     <View style={styles.card}>
-      {/* Top Block: Student Info & Amount */}
+
+      {/* ===================================================
+          STUDENT + AMOUNT
+      =================================================== */}
+
       <View style={styles.cardHeader}>
+
         <View style={styles.studentBlock}>
+
           <View style={styles.avatarCircle}>
-            <Icon name="account" size={22} color="#FFFFFF" />
+            <Icon
+              name="account"
+              size={22}
+              color="#FFFFFF"
+            />
           </View>
+
           <View style={styles.studentTextGroup}>
-            <Text style={styles.studentName}>{item.student}</Text>
-            <Text style={styles.courseName}>{item.course}</Text>
+
+            <Text style={styles.studentName}>
+              {item.student || "Unknown Student"}
+            </Text>
+
+            <Text style={styles.courseName}>
+              {item.course || "Unknown Course"}
+            </Text>
+
           </View>
+
         </View>
 
+
+        {/* Amount */}
+
         <View style={styles.amountContainer}>
-          <Text style={styles.amountLabel}>AMOUNT</Text>
-          <Text style={styles.amountText}>
-            Rs. {Number(item.amount).toLocaleString()}
+
+          <Text style={styles.amountLabel}>
+            AMOUNT
           </Text>
+
+          <Text style={styles.amountText}>
+            Rs.{" "}
+            {Number(item.amount || 0).toLocaleString()}
+          </Text>
+
         </View>
+
       </View>
+
 
       <View style={styles.divider} />
 
-      {/* Meta Information Rows */}
+
+      {/* ===================================================
+          PAYMENT INFORMATION
+      =================================================== */}
+
       <View style={styles.metaContainer}>
+
         <InfoRow
           icon="credit-card-outline"
           iconColor="#F59E0B"
           label="Payment Method"
           value={item.paymentType}
         />
+
         <InfoRow
           icon="calendar-month-outline"
           iconColor="#3B82F6"
           label="Transaction Date"
-          value={new Date(item.paymentDate).toLocaleDateString(undefined, {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          })}
+          value={
+            item.paymentDate
+              ? new Date(
+                  item.paymentDate
+                ).toLocaleDateString(undefined, {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })
+              : "-"
+          }
         />
+
       </View>
 
-      {/* Status Indicators */}
+
+      {/* ===================================================
+          STATUS
+      =================================================== */}
+
       <View style={styles.statusSection}>
+
+        {/* Parent Status */}
+
         <View style={styles.statusBlock}>
-          <Text style={styles.statusLabel}>Parent Status</Text>
+
+          <Text style={styles.statusLabel}>
+            Parent Status
+          </Text>
+
           <StatusPill
             text={item.parentStatus}
-            positive={item.parentStatus === "Paid"}
+            positive={
+              item.parentStatus === "Paid"
+            }
           />
+
         </View>
+
+
+        {/* Tutor Status */}
 
         <View style={styles.statusBlock}>
-          <Text style={styles.statusLabel}>Tutor Status</Text>
+
+          <Text style={styles.statusLabel}>
+            Tutor Status
+          </Text>
+
           <StatusPill
             text={item.tutorStatus}
-            positive={item.tutorStatus === "Received"}
+            positive={
+              item.tutorStatus === "Received"
+            }
           />
+
         </View>
+
       </View>
 
-      {/* Action Buttons */}
+
+      {/* ===================================================
+          ACTION BUTTONS
+      =================================================== */}
+
       <View style={styles.buttonRow}>
-        <TouchableOpacity
-          activeOpacity={0.8}
-          style={[styles.button, styles.receivedButton]}
-          onPress={() => updateStatus(item.paymentId, "Received")}
-        >
-          <Icon name="check-circle" size={18} color="#FFFFFF" />
-          <Text style={styles.receivedButtonText}>Mark Received</Text>
-        </TouchableOpacity>
+
+        {/* Mark Received */}
 
         <TouchableOpacity
           activeOpacity={0.8}
-          style={[styles.button, styles.notReceivedButton]}
-          onPress={() => updateStatus(item.paymentId, "NotReceived")}
+          style={[
+            styles.button,
+            styles.receivedButton,
+          ]}
+          onPress={() =>
+            updateStatus(
+              item.paymentId,
+              "Received"
+            )
+          }
         >
-          <Icon name="close-circle-outline" size={18} color="#EF4444" />
-          <Text style={styles.notReceivedButtonText}>Not Received</Text>
+
+          <Icon
+            name="check-circle"
+            size={18}
+            color="#FFFFFF"
+          />
+
+          <Text style={styles.receivedButtonText}>
+            Mark Received
+          </Text>
+
         </TouchableOpacity>
+
+
+        {/* Not Received */}
+
+        <TouchableOpacity
+          activeOpacity={0.8}
+          style={[
+            styles.button,
+            styles.notReceivedButton,
+          ]}
+          onPress={() =>
+            updateStatus(
+              item.paymentId,
+              "NotReceived"
+            )
+          }
+        >
+
+          <Icon
+            name="close-circle-outline"
+            size={18}
+            color="#EF4444"
+          />
+
+          <Text style={styles.notReceivedButtonText}>
+            Not Received
+          </Text>
+
+        </TouchableOpacity>
+
       </View>
+
     </View>
   );
 
+
+  // =========================================================
+  // LOADING SCREEN
+  // =========================================================
+
   if (loading) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-        <ActivityIndicator size="large" color={colors.primary || "#4F46E5"} />
-        <Text style={styles.loadingText}>Fetching payment history...</Text>
+      <SafeAreaView
+        style={styles.loadingContainer}
+      >
+
+        <StatusBar
+          barStyle="dark-content"
+          backgroundColor="#FFFFFF"
+        />
+
+        <ActivityIndicator
+          size="large"
+          color={
+            colors.primary || "#4F46E5"
+          }
+        />
+
+        <Text style={styles.loadingText}>
+          Fetching payment history...
+        </Text>
+
       </SafeAreaView>
     );
   }
 
+
+  // =========================================================
+  // MAIN SCREEN
+  // =========================================================
+
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      {/* Top Header */}
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#FFFFFF"
+      />
+
+
+      {/* ===================================================
+          TOP HEADER
+      =================================================== */}
+
       <View style={styles.topHeader}>
+
+        {/* Back Button */}
+
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          hitSlop={{
+            top: 10,
+            bottom: 10,
+            left: 10,
+            right: 10,
+          }}
         >
-          <Icon name="arrow-left" size={22} color="#1E293B" />
+
+          <Icon
+            name="arrow-left"
+            size={22}
+            color="#1E293B"
+          />
+
         </TouchableOpacity>
 
+
+        {/* Logo */}
+
         <View style={styles.headerCenter}>
+
           <Image
-            source={require("../../../assets/images/logo.png")}
+            source={require(
+              "../../../assets/images/logo.png"
+            )}
             style={styles.logoImage}
           />
-          <Text style={styles.logoText}>House of Tutor</Text>
+
+          <Text style={styles.logoText}>
+            House of Tutor
+          </Text>
+
         </View>
 
+
         <View style={styles.headerSpacer} />
+
       </View>
 
-      {/* Screen Title & Summary Component Header */}
+
+      {/* ===================================================
+          PAYMENT LIST
+      =================================================== */}
+
       <FlatList
         data={payments}
-        keyExtractor={(item) => item.paymentId.toString()}
-        renderItem={renderItem}
-        contentContainerStyle={
-          payments.length === 0 ? styles.flexGrow : styles.listContent
+
+        keyExtractor={(item) =>
+          item.paymentId.toString()
         }
+
+        renderItem={renderItem}
+
+        contentContainerStyle={
+          payments.length === 0
+            ? styles.flexGrow
+            : styles.listContent
+        }
+
         showsVerticalScrollIndicator={false}
+
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={colors.primary || "#4F46E5"}
+            tintColor={
+              colors.primary || "#4F46E5"
+            }
           />
         }
+
+
+        //=================================================
+        //    HEADER / SUMMARY
+        //================================================= 
+
         ListHeaderComponent={
           <View style={styles.headerContainer}>
+
             <View style={styles.titleRow}>
-              <Text style={styles.screenTitle}>Payment Overview</Text>
-              <Text style={styles.recordCount}>
-                {payments.length} {payments.length === 1 ? "Record" : "Records"}
+
+              <Text style={styles.screenTitle}>
+                Payment Overview
               </Text>
+
+              <Text style={styles.recordCount}>
+                {payments.length}{" "}
+                {payments.length === 1
+                  ? "Record"
+                  : "Records"}
+              </Text>
+
             </View>
 
-            {/* Financial Summary Card */}
-            {payments.length > 0 && (
-              <View style={styles.summaryCard}>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>Total Collected</Text>
-                  <Text style={[styles.summaryValue, { color: "#10B981" }]}>
-                    Rs. {metrics.totalReceived.toLocaleString()}
-                  </Text>
-                </View>
-                <View style={styles.summaryDivider} />
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>Pending Clearance</Text>
-                  <Text style={[styles.summaryValue, { color: "#F59E0B" }]}>
-                    Rs. {metrics.totalPending.toLocaleString()}
-                  </Text>
-                </View>
+
+            {/* =================================================
+                FINANCIAL SUMMARY
+            ================================================= */}
+
+            <View style={styles.summaryCard}>
+
+              {/* Total Collected */}
+
+              <View style={styles.summaryItem}>
+
+                <Text style={styles.summaryLabel}>
+                  Total Collected
+                </Text>
+
+                <Text
+                  style={[
+                    styles.summaryValue,
+                    {
+                      color: "#10B981",
+                    },
+                  ]}
+                >
+                  Rs.{" "}
+                  {Number(
+                    metrics.totalCollected
+                  ).toLocaleString()}
+                </Text>
+
               </View>
-            )}
+
+
+              <View style={styles.summaryDivider} />
+
+
+              {/* Pending Clearance */}
+
+              <View style={styles.summaryItem}>
+
+                <Text style={styles.summaryLabel}>
+                  Pending Clearance
+                </Text>
+
+                <Text
+                  style={[
+                    styles.summaryValue,
+                    {
+                      color: "#F59E0B",
+                    },
+                  ]}
+                >
+                  Rs.{" "}
+                  {Number(
+                    metrics.totalPending
+                  ).toLocaleString()}
+                </Text>
+
+              </View>
+
+            </View>
+
           </View>
         }
+
+
+        //  ===================================================
+        //     EMPTY STATE
+        // =================================================== 
+
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
+
             <View style={styles.emptyIconCircle}>
-              <Icon name="cash-multiple" size={36} color="#94A3B8" />
+
+              <Icon
+                name="cash-multiple"
+                size={36}
+                color="#94A3B8"
+              />
+
             </View>
-            <Text style={styles.emptyTitle}>No Payments Records Found</Text>
-            <Text style={styles.emptySubtitle}>
-              When students process payments for your courses, they will show up here.
+
+            <Text style={styles.emptyTitle}>
+              No Pending Payment Records Found
             </Text>
+
+            <Text style={styles.emptySubtitle}>
+              There are currently no payments
+              waiting for your action.
+            </Text>
+
           </View>
         }
       />
+
     </SafeAreaView>
   );
 }
 
+
+// =============================================================
+// STYLES
+// =============================================================
+
 const styles = StyleSheet.create({
+
   container: {
     flex: 1,
     backgroundColor: "#F8FAFC",
@@ -340,6 +772,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#F8FAFC",
   },
+
   loadingText: {
     marginTop: 12,
     fontSize: 14,
@@ -347,7 +780,11 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
-  /* Top App Bar */
+
+  // ===========================================================
+  // TOP HEADER
+  // ===========================================================
+
   topHeader: {
     height: 56,
     flexDirection: "row",
@@ -358,6 +795,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#F1F5F9",
   },
+
   backButton: {
     width: 36,
     height: 36,
@@ -368,51 +806,66 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E2E8F0",
   },
+
   headerCenter: {
     flexDirection: "row",
     alignItems: "center",
   },
+
   logoImage: {
     width: 26,
     height: 26,
     resizeMode: "contain",
     marginRight: 8,
   },
+
   logoText: {
     fontSize: 16,
     fontWeight: "700",
     color: colors.primary || "#4F46E5",
     letterSpacing: -0.2,
   },
+
   headerSpacer: {
     width: 36,
   },
 
-  /* List Header Components */
+
+  // ===========================================================
+  // LIST HEADER
+  // ===========================================================
+
   headerContainer: {
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 8,
   },
+
   titleRow: {
     flexDirection: "row",
     alignItems: "baseline",
     justifyContent: "space-between",
     marginBottom: 12,
   },
+
   screenTitle: {
     fontSize: 22,
     fontWeight: "800",
     color: "#0F172A",
     letterSpacing: -0.3,
   },
+
   recordCount: {
     fontSize: 13,
     fontWeight: "600",
     color: "#64748B",
   },
 
-  /* Summary Card */
+
+  // ===========================================================
+  // SUMMARY CARD
+  // ===========================================================
+
   summaryCard: {
     flexDirection: "row",
     backgroundColor: "#FFFFFF",
@@ -422,15 +875,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E2E8F0",
     shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
     shadowOpacity: 0.03,
     shadowRadius: 6,
     elevation: 1,
   },
+
   summaryItem: {
     flex: 1,
     alignItems: "center",
   },
+
   summaryLabel: {
     fontSize: 11,
     fontWeight: "600",
@@ -439,25 +897,36 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
     marginBottom: 4,
   },
+
   summaryValue: {
     fontSize: 16,
     fontWeight: "800",
   },
+
   summaryDivider: {
     width: 1,
     backgroundColor: "#E2E8F0",
     marginVertical: 2,
   },
 
-  /* FlatList Styles */
+
+  // ===========================================================
+  // FLAT LIST
+  // ===========================================================
+
   listContent: {
     paddingBottom: 24,
   },
+
   flexGrow: {
     flexGrow: 1,
   },
 
-  /* Payment Card */
+
+  // ===========================================================
+  // PAYMENT CARD
+  // ===========================================================
+
   card: {
     backgroundColor: "#FFFFFF",
     marginHorizontal: 16,
@@ -467,7 +936,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E2E8F0",
     shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
     shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 2,
@@ -478,29 +950,39 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
+
   studentBlock: {
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
     marginRight: 10,
   },
+
   avatarCircle: {
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: colors.primary || "#4F46E5",
+    backgroundColor:
+      colors.primary || "#4F46E5",
     alignItems: "center",
-    justifycontent: "center",
+
+    // FIXED:
+    // It was "justifycontent"
+    justifyContent: "center",
+
     marginRight: 12,
   },
+
   studentTextGroup: {
     flex: 1,
   },
+
   studentName: {
     fontSize: 15,
     fontWeight: "700",
     color: "#0F172A",
   },
+
   courseName: {
     fontSize: 13,
     color: "#64748B",
@@ -508,15 +990,22 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
+
+  // ===========================================================
+  // AMOUNT
+  // ===========================================================
+
   amountContainer: {
     alignItems: "flex-end",
   },
+
   amountLabel: {
     fontSize: 10,
     fontWeight: "700",
     color: "#94A3B8",
     letterSpacing: 0.5,
   },
+
   amountText: {
     fontSize: 16,
     fontWeight: "800",
@@ -524,13 +1013,18 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
+
   divider: {
     height: 1,
     backgroundColor: "#F1F5F9",
     marginVertical: 14,
   },
 
-  /* Meta Info Rows */
+
+  // ===========================================================
+  // META INFORMATION
+  // ===========================================================
+
   metaContainer: {
     gap: 8,
     backgroundColor: "#F8FAFC",
@@ -538,10 +1032,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 14,
   },
+
   infoRow: {
     flexDirection: "row",
     alignItems: "center",
   },
+
   iconWrap: {
     width: 26,
     height: 26,
@@ -550,12 +1046,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 10,
   },
+
   infoLabel: {
     fontSize: 12,
     fontWeight: "500",
     color: "#64748B",
     width: 110,
   },
+
   infoValue: {
     fontSize: 13,
     fontWeight: "600",
@@ -564,16 +1062,22 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
 
-  /* Status Pills */
+
+  // ===========================================================
+  // STATUS
+  // ===========================================================
+
   statusSection: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 16,
     gap: 12,
   },
+
   statusBlock: {
     flex: 1,
   },
+
   statusLabel: {
     fontSize: 11,
     fontWeight: "600",
@@ -582,6 +1086,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.3,
   },
+
   pill: {
     flexDirection: "row",
     alignItems: "center",
@@ -591,23 +1096,30 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
   },
+
   pillDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
     marginRight: 6,
   },
+
   pillText: {
     fontSize: 12,
     fontWeight: "700",
   },
 
-  /* Buttons */
+
+  // ===========================================================
+  // BUTTONS
+  // ===========================================================
+
   buttonRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     gap: 10,
   },
+
   button: {
     flex: 1,
     flexDirection: "row",
@@ -617,31 +1129,42 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     gap: 6,
   },
+
   receivedButton: {
     backgroundColor: "#10B981",
     shadowColor: "#10B981",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 2,
   },
+
   notReceivedButton: {
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: "#FECACA",
   },
+
   receivedButtonText: {
     color: "#FFFFFF",
     fontWeight: "700",
     fontSize: 13,
   },
+
   notReceivedButtonText: {
     color: "#EF4444",
     fontWeight: "700",
     fontSize: 13,
   },
 
-  /* Empty State */
+
+  // ===========================================================
+  // EMPTY STATE
+  // ===========================================================
+
   emptyContainer: {
     flex: 1,
     alignItems: "center",
@@ -649,6 +1172,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     paddingVertical: 60,
   },
+
   emptyIconCircle: {
     width: 72,
     height: 72,
@@ -658,6 +1182,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 16,
   },
+
   emptyTitle: {
     fontSize: 16,
     fontWeight: "700",
@@ -665,10 +1190,12 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     textAlign: "center",
   },
+
   emptySubtitle: {
     fontSize: 13,
     color: "#64748B",
     textAlign: "center",
     lineHeight: 18,
   },
+
 });

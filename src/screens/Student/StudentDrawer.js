@@ -38,6 +38,12 @@ const MENU_ITEMS = [
     route: "TodayClasses",
     description: "Manage your daily class schedule",
   },
+  {
+    label: "My Fee",
+    icon: "account-balance-wallet",
+    route: "StudentFee",
+    description: "View and manage your course fee",
+  },
 ];
 
 const StudentDrawer = ({ navigation }) => {
