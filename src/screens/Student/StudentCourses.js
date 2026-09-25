@@ -22,7 +22,9 @@ const StudentCourses = ({ navigation }) => {
   const [userLat, setUserLat] = useState(null);
   const [userLng, setUserLng] = useState(null);
 
-  // ── Load location + userId saved at login ─────────────────────────
+  // ============================================================
+  // STEP 1: Load user location
+  // ============================================================
   const loadUserData = async () => {
     try {
       const lat = await AsyncStorage.getItem("latitude");
@@ -40,13 +42,17 @@ const StudentCourses = ({ navigation }) => {
     }
   };
 
-  // ── Fetch student's enrolled courses ──────────────────────────────
+  // ============================================================
+  // STEP 2: Fetch student's enrolled courses
+  // ============================================================
   const fetchSubjects = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
 
       const res = await fetch(`${BASE_URL}/Student/my-courses`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       const data = await res.json();
@@ -56,6 +62,7 @@ const StudentCourses = ({ navigation }) => {
           id: c.course_id,
           name: c.course_name,
         }));
+
         setSubjects(formatted);
       }
     } catch (err) {
@@ -63,16 +70,22 @@ const StudentCourses = ({ navigation }) => {
     }
   };
 
+  // ============================================================
+  // STEP 3: Initial loading
+  // ============================================================
   useEffect(() => {
     const init = async () => {
       await loadUserData();
       await fetchSubjects();
       setLoading(false);
     };
+
     init();
   }, []);
 
-  // ── Navigate to StudentFindTutor ───────────────────────────────────
+  // ============================================================
+  // STEP 4: Navigate to Visiting Tutor screen
+  // ============================================================
   const handleFindTutor = (subject) => {
     if (userLat == null || userLng == null) {
       alert("Location not found. Please enable location access.");
@@ -87,11 +100,24 @@ const StudentCourses = ({ navigation }) => {
     });
   };
 
+  // ============================================================
+  // STEP 5: Navigate to Non-Visiting Tutor screen
+  // No location is required here
+  // ============================================================
+  const handleFindNonVisitingTutor = (subject) => {
+    navigation.navigate("StudentFindTutorNonVisting", {
+      courseId: subject.id,
+      courseName: subject.name,
+    });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      {/* HEADER */}
+      {/* ========================================================
+          HEADER
+      ======================================================== */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.headerIconButton}
@@ -106,6 +132,7 @@ const StudentCourses = ({ navigation }) => {
             source={require("../../../assets/images/logo.png")}
             style={styles.logoImage}
           />
+
           <Text style={styles.logoText}>House of Tutor</Text>
         </View>
 
@@ -114,19 +141,27 @@ const StudentCourses = ({ navigation }) => {
           onPress={() => navigation.navigate("StudentAddCourses")}
           activeOpacity={0.7}
         >
-          <Icon name="add" size={24} color={colors.primary || "#4F46E5"} />
+          <Icon
+            name="add"
+            size={24}
+            color={colors.primary || "#4F46E5"}
+          />
         </TouchableOpacity>
       </View>
 
-      {/* CONTENT */}
+      {/* ========================================================
+          CONTENT
+      ======================================================== */}
       <View style={styles.content}>
         <View style={styles.titleContainer}>
           <View>
             <Text style={styles.pageTitle}>My Enrolled Courses</Text>
+
             <Text style={styles.pageSubtitle}>
-              Select a subject to find tutors near your location
+              Select a subject to find a tutor
             </Text>
           </View>
+
           {subjects.length > 0 && (
             <View style={styles.badge}>
               <Text style={styles.badgeText}>{subjects.length}</Text>
@@ -136,8 +171,14 @@ const StudentCourses = ({ navigation }) => {
 
         {loading ? (
           <View style={styles.loaderContainer}>
-            <ActivityIndicator size="large" color={colors.primary || "#4F46E5"} />
-            <Text style={styles.loadingText}>Fetching your courses...</Text>
+            <ActivityIndicator
+              size="large"
+              color={colors.primary || "#4F46E5"}
+            />
+
+            <Text style={styles.loadingText}>
+              Fetching your courses...
+            </Text>
           </View>
         ) : (
           <FlatList
@@ -148,43 +189,110 @@ const StudentCourses = ({ navigation }) => {
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <View style={styles.emptyIconCircle}>
-                  <Icon name="class" size={48} color="#94A3B8" />
+                  <Icon
+                    name="class"
+                    size={48}
+                    color="#94A3B8"
+                  />
                 </View>
-                <Text style={styles.emptyTitle}>No Enrolled Courses</Text>
-                <Text style={styles.emptySubtitle}>
-                  You haven't added any courses to your profile yet. Add a course to start searching for tutors.
+
+                <Text style={styles.emptyTitle}>
+                  No Enrolled Courses
                 </Text>
+
+                <Text style={styles.emptySubtitle}>
+                  You haven't added any courses to your profile yet.
+                  Add a course to start searching for tutors.
+                </Text>
+
                 <TouchableOpacity
                   style={styles.emptyButton}
-                  onPress={() => navigation.navigate("StudentAddCourses")}
+                  onPress={() =>
+                    navigation.navigate("StudentAddCourses")
+                  }
                   activeOpacity={0.8}
                 >
-                  <Icon name="add-circle-outline" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
-                  <Text style={styles.emptyButtonText}>Explore Courses</Text>
+                  <Icon
+                    name="add-circle-outline"
+                    size={18}
+                    color="#FFFFFF"
+                    style={{ marginRight: 6 }}
+                  />
+
+                  <Text style={styles.emptyButtonText}>
+                    Explore Courses
+                  </Text>
                 </TouchableOpacity>
               </View>
             }
             renderItem={({ item }) => (
               <View style={styles.card}>
+                {/* ==================================================
+                    COURSE HEADER
+                ================================================== */}
                 <View style={styles.cardHeader}>
                   <View style={styles.courseIconContainer}>
-                    <Icon name="auto-stories" size={22} color={colors.primary || "#4F46E5"} />
+                    <Icon
+                      name="auto-stories"
+                      size={22}
+                      color={colors.primary || "#4F46E5"}
+                    />
                   </View>
+
                   <View style={styles.courseDetails}>
-                    <Text style={styles.subject} numberOfLines={2}>
+                    <Text
+                      style={styles.subject}
+                      numberOfLines={2}
+                    >
                       {item.name}
                     </Text>
-                    <Text style={styles.courseMeta}>Active Course</Text>
+
+                    <Text style={styles.courseMeta}>
+                      Active Course
+                    </Text>
                   </View>
                 </View>
 
+                {/* ==================================================
+                    VISITING TUTOR BUTTON
+                ================================================== */}
                 <TouchableOpacity
                   style={styles.button}
                   onPress={() => handleFindTutor(item)}
                   activeOpacity={0.85}
                 >
-                  <Text style={styles.buttonText}>Find Tutor</Text>
-                  <Icon name="search" size={18} color="#FFFFFF" style={{ marginLeft: 6 }} />
+                  <Icon
+                    name="location-on"
+                    size={18}
+                    color="#FFFFFF"
+                    style={{ marginRight: 6 }}
+                  />
+
+                  <Text style={styles.buttonText}>
+                    Find Visiting Tutor
+                  </Text>
+                </TouchableOpacity>
+
+                {/* ==================================================
+                    NON-VISITING TUTOR BUTTON
+                ================================================== */}
+                <TouchableOpacity
+                  style={styles.nonVisitingButton}
+                  onPress={() =>
+                    handleFindNonVisitingTutor(item)
+                  }
+                  activeOpacity={0.85}
+                >
+                  <Icon
+                    name="school"
+                    size={18}
+                    color={colors.primary || "#4F46E5"}
+                    style={{ marginRight: 6 }}
+                  />
+
+                  <Text style={styles.nonVisitingButtonText}>
+                    Find Non-Visiting Tutor
+                  </Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -192,40 +300,77 @@ const StudentCourses = ({ navigation }) => {
         )}
       </View>
 
-      {/* BOTTOM NAV */}
+      {/* ========================================================
+          BOTTOM NAVIGATION
+      ======================================================== */}
       <View style={styles.bottomNav}>
+        {/* Schedule */}
         <TouchableOpacity
           style={styles.navItem}
           onPress={() => navigation.navigate("StudentHome")}
           activeOpacity={0.7}
         >
-          <Icon name="calendar-today" size={22} color="#64748B" />
-          <Text style={styles.navText}>Schedule</Text>
+          <Icon
+            name="calendar-today"
+            size={22}
+            color="#64748B"
+          />
+
+          <Text style={styles.navText}>
+            Schedule
+          </Text>
         </TouchableOpacity>
 
+        {/* Add Courses */}
         <TouchableOpacity
           style={styles.navItem}
           onPress={() => navigation.navigate("StudentAddCourses")}
           activeOpacity={0.7}
         >
-          <Icon name="library-add" size={22} color="#64748B" />
-          <Text style={styles.navText}>Add Courses</Text>
+          <Icon
+            name="library-add"
+            size={22}
+            color="#64748B"
+          />
+
+          <Text style={styles.navText}>
+            Add Courses
+          </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.navItem} activeOpacity={0.7}>
+        {/* Courses */}
+        <TouchableOpacity
+          style={styles.navItem}
+          activeOpacity={0.7}
+        >
           <View style={styles.activeNavIndicator}>
-            <Icon name="menu-book" size={22} color={colors.primary || "#4F46E5"} />
+            <Icon
+              name="menu-book"
+              size={22}
+              color={colors.primary || "#4F46E5"}
+            />
           </View>
-          <Text style={styles.navTextActive}>Courses</Text>
+
+          <Text style={styles.navTextActive}>
+            Courses
+          </Text>
         </TouchableOpacity>
 
+        {/* Classes */}
         <TouchableOpacity
           style={styles.navItem}
           onPress={() => navigation.navigate("StudentAllClasses")}
           activeOpacity={0.7}
         >
-          <Icon name="school" size={22} color="#64748B" />
-          <Text style={styles.navText}>Classes</Text>
+          <Icon
+            name="school"
+            size={22}
+            color="#64748B"
+          />
+
+          <Text style={styles.navText}>
+            Classes
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -234,13 +379,20 @@ const StudentCourses = ({ navigation }) => {
 
 export default StudentCourses;
 
+// ================================================================
+// STYLES
+// ================================================================
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F8FAFC",
   },
 
-  // ── HEADER STYLES ──────────────────────────────────────────────
+  // ==============================================================
+  // HEADER
+  // ==============================================================
+
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -252,7 +404,10 @@ const styles = StyleSheet.create({
     borderBottomColor: "#F1F5F9",
     elevation: 3,
     shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
     shadowOpacity: 0.04,
     shadowRadius: 8,
   },
@@ -285,7 +440,10 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
 
-  // ── CONTENT STYLES ─────────────────────────────────────────────
+  // ==============================================================
+  // CONTENT
+  // ==============================================================
+
   content: {
     flex: 1,
     paddingHorizontal: 20,
@@ -313,7 +471,8 @@ const styles = StyleSheet.create({
   },
 
   badge: {
-    backgroundColor: (colors.primary || "#4F46E5") + "15",
+    backgroundColor:
+      (colors.primary || "#4F46E5") + "15",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -329,7 +488,10 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
 
-  // ── CARD STYLES ────────────────────────────────────────────────
+  // ==============================================================
+  // COURSE CARD
+  // ==============================================================
+
   card: {
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
@@ -339,7 +501,10 @@ const styles = StyleSheet.create({
     borderColor: "#F1F5F9",
     elevation: 2,
     shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
     shadowOpacity: 0.03,
     shadowRadius: 10,
   },
@@ -354,7 +519,8 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: (colors.primary || "#4F46E5") + "10",
+    backgroundColor:
+      (colors.primary || "#4F46E5") + "10",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 14,
@@ -378,13 +544,19 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
+  // ==============================================================
+  // VISITING BUTTON
+  // ==============================================================
+
   button: {
-    backgroundColor: colors.primary || "#4F46E5",
+    backgroundColor:
+      colors.primary || "#4F46E5",
     height: 44,
     borderRadius: 10,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    marginBottom: 10,
   },
 
   buttonText: {
@@ -393,7 +565,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 
-  // ── EMPTY & LOADING STATES ─────────────────────────────────────
+  // ==============================================================
+  // NON-VISITING BUTTON
+  // ==============================================================
+
+  nonVisitingButton: {
+    height: 44,
+    borderRadius: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: colors.primary || "#4F46E5",
+  },
+
+  nonVisitingButtonText: {
+    color: colors.primary || "#4F46E5",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+
+  // ==============================================================
+  // LOADING
+  // ==============================================================
+
   loaderContainer: {
     flex: 1,
     justifyContent: "center",
@@ -407,6 +603,10 @@ const styles = StyleSheet.create({
     color: "#64748B",
     fontWeight: "500",
   },
+
+  // ==============================================================
+  // EMPTY STATE
+  // ==============================================================
 
   emptyContainer: {
     alignItems: "center",
@@ -443,7 +643,8 @@ const styles = StyleSheet.create({
   emptyButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.primary || "#4F46E5",
+    backgroundColor:
+      colors.primary || "#4F46E5",
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 10,
@@ -455,7 +656,10 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  // ── BOTTOM NAV STYLES ──────────────────────────────────────────
+  // ==============================================================
+  // BOTTOM NAVIGATION
+  // ==============================================================
+
   bottomNav: {
     position: "absolute",
     bottom: 0,
@@ -471,7 +675,10 @@ const styles = StyleSheet.create({
     borderTopColor: "#F1F5F9",
     elevation: 8,
     shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: -4 },
+    shadowOffset: {
+      width: 0,
+      height: -4,
+    },
     shadowOpacity: 0.04,
     shadowRadius: 12,
   },

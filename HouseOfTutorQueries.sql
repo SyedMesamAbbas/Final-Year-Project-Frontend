@@ -250,7 +250,7 @@ ADD fee_responsibility VARCHAR(20) NOT NULL
 
 ALTER TABLE Student
 ADD fee_responsibility VARCHAR(20) NULL;
-
+--1040 and 2031
 
 Select * from Users
 Select * from Student
@@ -264,6 +264,7 @@ Select * from Student_Course_Fee
 Select * from Request
 Select * from Payment
 
+Delete Payment
 
 Update Payment set tutor_status='Pending' where fee_id=5
 Update Payment set tutor_status='Received' where fee_id=5
@@ -279,5 +280,8 @@ update Tutor_Course set institute='FAST' where grade!='A'
 update Tutor_Course set institute='BIIT' where grade='A'
 update Request set class_date='2026-09-13' where request_id=3042
 update Request set Status='Accepted' where request_id=3042
+update Tutor set teaching_mode='Visiting' where user_id=6
+update Tutor set teaching_mode='Visiting' where user_id=2
+update Tutor set status='Approved' where user_id=2
 
 Delete Student_Course where course_id=2

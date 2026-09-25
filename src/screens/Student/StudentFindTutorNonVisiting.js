@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+
 import {
   View,
   Text,
@@ -31,6 +32,12 @@ const DURATION_UNITS = [
 
 // ======================================================
 // SORT OPTIONS
+//
+// Backend accepts:
+// institute
+// feedback
+// grade
+// fee
 // ======================================================
 
 const SORT_OPTIONS = [
@@ -48,16 +55,17 @@ const SORT_OPTIONS = [
   },
   {
     key: "fee",
-    label: "Fee",
+    label: "Payment",
   },
 ];
 
-const StudentFindTutor = ({ navigation, route }) => {
+const StudentFindTutorNonVisiting = ({
+  navigation,
+  route,
+}) => {
   const {
     courseId,
     courseName,
-    userLat,
-    userLng,
   } = route.params || {};
 
   // ======================================================
@@ -77,12 +85,15 @@ const StudentFindTutor = ({ navigation, route }) => {
   // MULTIPLE TUTOR SELECTION
   // ======================================================
 
-  const [selectedTutors, setSelectedTutors] = useState([]);
+  const [selectedTutors, setSelectedTutors] =
+    useState([]);
 
   /*
-   * All selected tutors must have the same day/time because
-   * the backend CreateRequestDto accepts only one day and
-   * one time for the complete request group.
+   * All selected tutors must have the same
+   * day and time.
+   *
+   * The create-request API accepts one
+   * day and one time for the complete group.
    */
   const [selectedRequestDay, setSelectedRequestDay] =
     useState("");
@@ -122,7 +133,7 @@ const StudentFindTutor = ({ navigation, route }) => {
   }, [sortBy]);
 
   // ======================================================
-  // FETCH TUTORS
+  // FETCH NON-VISITING TUTORS
   // ======================================================
 
   const fetchTutors = async (
@@ -131,27 +142,37 @@ const StudentFindTutor = ({ navigation, route }) => {
     try {
       setLoading(true);
 
-      // --------------------------------------------------
-      // VALIDATE PARAMETERS
-      // --------------------------------------------------
+      // ==================================================
+      // VALIDATE COURSE
+      // ==================================================
 
-      if (
-        !courseId ||
-        userLat == null ||
-        userLng == null
-      ) {
+      /*
+       * IMPORTANT:
+       *
+       * Non-Visiting search DOES NOT require:
+       *
+       * userLat
+       * userLng
+       * distance
+       * radius
+       *
+       * Student will visit tutor's location.
+       */
+
+      if (!courseId) {
         Alert.alert(
           "Error",
-          "Missing required location or course parameters."
+          "Course information is missing."
         );
 
         navigation.goBack();
+
         return;
       }
 
-      // --------------------------------------------------
+      // ==================================================
       // TOKEN
-      // --------------------------------------------------
+      // ==================================================
 
       const token =
         await AsyncStorage.getItem("token");
@@ -163,18 +184,31 @@ const StudentFindTutor = ({ navigation, route }) => {
         );
 
         setTutorsData([]);
+
         return;
       }
 
-      // --------------------------------------------------
+      // ==================================================
       // API URL
-      // --------------------------------------------------
+      // ==================================================
+
+      /*
+       * NEW NON-VISITING API:
+       *
+       * GET /Student/search-non-visiting-tutors
+       *
+       * Parameters:
+       *
+       * courseId
+       * sortBy
+       *
+       * NO latitude
+       * NO longitude
+       */
 
       const url =
-        `${BASE_URL}/Student/search-by-time-location-visiting-tutor` +
+        `${BASE_URL}/Student/search-non-visiting-tutors` +
         `?courseId=${encodeURIComponent(courseId)}` +
-        `&userLat=${encodeURIComponent(userLat)}` +
-        `&userLng=${encodeURIComponent(userLng)}` +
         `&sortBy=${encodeURIComponent(selectedSort)}`;
 
       console.log(
@@ -182,12 +216,17 @@ const StudentFindTutor = ({ navigation, route }) => {
       );
 
       console.log(
-        "SEARCH TUTORS API"
+        "SEARCH NON-VISITING TUTORS API"
       );
 
       console.log(
         "SORT BY:",
         selectedSort
+      );
+
+      console.log(
+        "COURSE ID:",
+        courseId
       );
 
       console.log(
@@ -199,9 +238,9 @@ const StudentFindTutor = ({ navigation, route }) => {
         "===================================="
       );
 
-      // --------------------------------------------------
+      // ==================================================
       // API CALL
-      // --------------------------------------------------
+      // ==================================================
 
       const response = await fetch(url, {
         method: "GET",
@@ -212,9 +251,9 @@ const StudentFindTutor = ({ navigation, route }) => {
         },
       });
 
-      // --------------------------------------------------
-      // RESPONSE
-      // --------------------------------------------------
+      // ==================================================
+      // READ RESPONSE
+      // ==================================================
 
       const responseText =
         await response.text();
@@ -243,7 +282,7 @@ const StudentFindTutor = ({ navigation, route }) => {
       );
 
       console.log(
-        "SEARCH TUTORS RESPONSE"
+        "NON-VISITING TUTORS RESPONSE"
       );
 
       console.log(
@@ -264,13 +303,19 @@ const StudentFindTutor = ({ navigation, route }) => {
         "===================================="
       );
 
-      // --------------------------------------------------
+      // ==================================================
       // SUCCESS
-      // --------------------------------------------------
+      // ==================================================
 
       if (response.ok) {
-        if (Array.isArray(data?.tutors)) {
-          setTutorsData(data.tutors);
+        if (
+          Array.isArray(
+            data?.tutors
+          )
+        ) {
+          setTutorsData(
+            data.tutors
+          );
         } else {
           setTutorsData([]);
         }
@@ -278,16 +323,16 @@ const StudentFindTutor = ({ navigation, route }) => {
         return;
       }
 
-      // --------------------------------------------------
+      // ==================================================
       // ERROR
-      // --------------------------------------------------
+      // ==================================================
 
       setTutorsData([]);
 
       Alert.alert(
         "Info",
         data?.message ||
-          "No tutors found in your area."
+          "No Non-Visiting tutors found for this course."
       );
     } catch (error) {
       console.log(
@@ -295,7 +340,7 @@ const StudentFindTutor = ({ navigation, route }) => {
       );
 
       console.log(
-        "FETCH TUTORS ERROR:"
+        "FETCH NON-VISITING TUTORS ERROR:"
       );
 
       console.log(error);
@@ -334,7 +379,7 @@ const StudentFindTutor = ({ navigation, route }) => {
   };
 
   // ======================================================
-  // HOURLY RATE
+  // HOURLY RATE / PAYMENT
   // ======================================================
 
   const getHourlyRate = (item) => {
@@ -391,10 +436,14 @@ const StudentFindTutor = ({ navigation, route }) => {
   // CHECK IF TUTOR IS SELECTED
   // ======================================================
 
-  const isTutorSelected = (tutorId) => {
+  const isTutorSelected = (
+    tutorId
+  ) => {
     return selectedTutors.some(
       (tutor) =>
-        Number(tutor.tutor_id) ===
+        Number(
+          tutor.tutor_id
+        ) ===
         Number(tutorId)
     );
   };
@@ -403,7 +452,9 @@ const StudentFindTutor = ({ navigation, route }) => {
   // SELECT / UNSELECT TUTOR
   // ======================================================
 
-  const toggleTutorSelection = (item) => {
+  const toggleTutorSelection = (
+    item
+  ) => {
     const tutorId =
       Number(item?.tutor_id);
 
@@ -419,24 +470,28 @@ const StudentFindTutor = ({ navigation, route }) => {
     const alreadySelected =
       isTutorSelected(tutorId);
 
-    // --------------------------------------------------
+    // ==================================================
     // REMOVE TUTOR
-    // --------------------------------------------------
+    // ==================================================
 
     if (alreadySelected) {
       const updatedTutors =
         selectedTutors.filter(
           (tutor) =>
-            Number(tutor.tutor_id) !==
-            tutorId
+            Number(
+              tutor.tutor_id
+            ) !== tutorId
         );
 
       setSelectedTutors(
         updatedTutors
       );
 
-      // If no tutors remain, clear day/time
-      if (updatedTutors.length === 0) {
+      // If no tutors remain,
+      // clear day/time.
+      if (
+        updatedTutors.length === 0
+      ) {
         setSelectedRequestDay("");
         setSelectedRequestTime("");
       }
@@ -444,11 +499,13 @@ const StudentFindTutor = ({ navigation, route }) => {
       return;
     }
 
-    // --------------------------------------------------
-    // UNAVAILABLE SLOT
-    // --------------------------------------------------
+    // ==================================================
+    // CHECK SLOT AVAILABILITY
+    // ==================================================
 
-    if (item?.is_available === false) {
+    if (
+      item?.is_available === false
+    ) {
       Alert.alert(
         "Tutor Unavailable",
         item?.availability_message ||
@@ -458,21 +515,28 @@ const StudentFindTutor = ({ navigation, route }) => {
       return;
     }
 
-    // --------------------------------------------------
-    // CHECK DAY/TIME
-    // --------------------------------------------------
+    // ==================================================
+    // CHECK DAY
+    // ==================================================
 
     const itemDay =
       String(
         item?.day || ""
       ).trim();
 
+    // ==================================================
+    // CHECK TIME
+    // ==================================================
+
     const itemTime =
       String(
         item?.time || ""
       ).trim();
 
-    if (!itemDay || !itemTime) {
+    if (
+      !itemDay ||
+      !itemTime
+    ) {
       Alert.alert(
         "Invalid Slot",
         "This tutor does not have a valid day or time slot."
@@ -481,18 +545,22 @@ const StudentFindTutor = ({ navigation, route }) => {
       return;
     }
 
+    // ==================================================
+    // SAME DAY/TIME CHECK
+    // ==================================================
+
     /*
-     * Backend CreateRequestDto has only one day
-     * and one time for the complete tutor group.
-     *
-     * Therefore all selected tutors must have
+     * All selected tutors must have
      * the same day and time.
      */
+
     if (
       selectedTutors.length > 0 &&
       (
-        selectedRequestDay !== itemDay ||
-        selectedRequestTime !== itemTime
+        selectedRequestDay !==
+          itemDay ||
+        selectedRequestTime !==
+          itemTime
       )
     ) {
       Alert.alert(
@@ -503,13 +571,14 @@ const StudentFindTutor = ({ navigation, route }) => {
       return;
     }
 
-    // --------------------------------------------------
+    // ==================================================
     // ADD TUTOR
-    // --------------------------------------------------
+    // ==================================================
 
     setSelectedTutors(
       (previous) => [
         ...previous,
+
         {
           tutor_id:
             tutorId,
@@ -517,6 +586,22 @@ const StudentFindTutor = ({ navigation, route }) => {
           tutor_name:
             item?.tutor_name ||
             "Tutor",
+
+          location:
+            item?.location ||
+            "",
+
+          qualification:
+            item?.qualification ||
+            "",
+
+          experience:
+            item?.experience ??
+            "",
+
+          teaching_mode:
+            item?.teaching_mode ||
+            "Non-Visiting",
 
           institute:
             item?.institute ||
@@ -561,7 +646,9 @@ const StudentFindTutor = ({ navigation, route }) => {
   // ======================================================
 
   const openRequestModal = () => {
-    if (selectedTutors.length === 0) {
+    if (
+      selectedTutors.length === 0
+    ) {
       Alert.alert(
         "Select Tutor",
         "Please select at least one tutor first."
@@ -771,9 +858,16 @@ const StudentFindTutor = ({ navigation, route }) => {
         return;
       }
 
-      // Remove duplicate tutor IDs
+      // ==================================================
+      // REMOVE DUPLICATE TUTOR IDS
+      // ==================================================
+
       const uniqueTutorIds =
-        [...new Set(tutorIds)];
+        [
+          ...new Set(
+            tutorIds
+          ),
+        ];
 
       // ==================================================
       // REQUEST BODY
@@ -782,7 +876,7 @@ const StudentFindTutor = ({ navigation, route }) => {
       /*
        * IMPORTANT:
        *
-       * New backend expects:
+       * create-request expects:
        *
        * tutor_ids
        * course_id
@@ -792,9 +886,9 @@ const StudentFindTutor = ({ navigation, route }) => {
        * learning_duration
        * learning_duration_unit
        *
-       * class_date is NOT sent.
-       * request_type is NOT sent.
-       * tutor_id is NOT sent.
+       * No class_date
+       * No request_type
+       * No single tutor_id
        */
 
       const requestBody = {
@@ -829,7 +923,7 @@ const StudentFindTutor = ({ navigation, route }) => {
       );
 
       console.log(
-        "CREATE MULTIPLE TUTOR REQUEST"
+        "CREATE NON-VISITING TUTOR REQUEST"
       );
 
       console.log(
@@ -1081,9 +1175,9 @@ const StudentFindTutor = ({ navigation, route }) => {
       let additionalMessage =
         "";
 
-      // --------------------------------------------------
-      // Existing active request
-      // --------------------------------------------------
+      // ==================================================
+      // EXISTING ACTIVE REQUEST
+      // ==================================================
 
       if (
         data?.request_group_id
@@ -1092,9 +1186,9 @@ const StudentFindTutor = ({ navigation, route }) => {
           `\n\nRequest Group ID: ${data.request_group_id}`;
       }
 
-      // --------------------------------------------------
-      // Missing tutor IDs
-      // --------------------------------------------------
+      // ==================================================
+      // MISSING TUTOR IDS
+      // ==================================================
 
       if (
         Array.isArray(
@@ -1109,9 +1203,9 @@ const StudentFindTutor = ({ navigation, route }) => {
           )}`;
       }
 
-      // --------------------------------------------------
-      // Inner error
-      // --------------------------------------------------
+      // ==================================================
+      // INNER ERROR
+      // ==================================================
 
       if (
         data?.inner_error
@@ -1153,6 +1247,37 @@ const StudentFindTutor = ({ navigation, route }) => {
   // FLATTEN TUTORS + COMMON SLOTS
   // ======================================================
 
+  /*
+   * Backend response:
+   *
+   * tutors: [
+   *   {
+   *     tutor_id,
+   *     tutor_name,
+   *     location,
+   *     qualification,
+   *     experience,
+   *     teaching_mode,
+   *     course_id,
+   *     institute,
+   *     grade,
+   *     hourly_rate,
+   *     average_rating,
+   *     total_reviews,
+   *     common_slots: [
+   *       {
+   *         day,
+   *         time,
+   *         is_available,
+   *         availability_message,
+   *         request_type,
+   *         class_date
+   *       }
+   *     ]
+   *   }
+   * ]
+   */
+
   const flattenedTutors =
     tutorsData.flatMap(
       (tutor) => {
@@ -1163,12 +1288,13 @@ const StudentFindTutor = ({ navigation, route }) => {
             ? tutor.common_slots
             : [];
 
-        /*
-         * If backend returns a tutor without slots,
-         * keep one card so the tutor information
-         * can still be displayed.
-         */
-        if (slots.length === 0) {
+        // ==================================================
+        // NO SLOTS
+        // ==================================================
+
+        if (
+          slots.length === 0
+        ) {
           return [
             {
               id:
@@ -1183,11 +1309,14 @@ const StudentFindTutor = ({ navigation, route }) => {
               location:
                 tutor.location,
 
-              distance:
-                tutor.distance,
+              qualification:
+                tutor.qualification,
 
-              tutor_radius:
-                tutor.tutor_radius,
+              experience:
+                tutor.experience,
+
+              teaching_mode:
+                tutor.teaching_mode,
 
               institute:
                 tutor.institute,
@@ -1204,29 +1333,34 @@ const StudentFindTutor = ({ navigation, route }) => {
               total_reviews:
                 tutor.total_reviews,
 
-              day:
-                tutor.day || "",
+              day: "",
 
-              time:
-                tutor.time || "",
+              time: "",
 
               is_available:
-                tutor.is_available !== false,
+                true,
 
               availability_message:
-                tutor.availability_message,
+                "Available",
             },
           ];
         }
 
+        // ==================================================
+        // CREATE CARD FOR EVERY COMMON SLOT
+        // ==================================================
+
         return slots.map(
-          (slot, index) => ({
+          (
+            slot,
+            index
+          ) => ({
             id:
               `${tutor.tutor_id}-${slot.day}-${slot.time}-${index}`,
 
-            // ------------------------------------------
+            // --------------------------------------------
             // TUTOR
-            // ------------------------------------------
+            // --------------------------------------------
 
             tutor_id:
               tutor.tutor_id,
@@ -1237,15 +1371,21 @@ const StudentFindTutor = ({ navigation, route }) => {
             location:
               tutor.location,
 
-            distance:
-              tutor.distance,
+            qualification:
+              tutor.qualification,
 
-            tutor_radius:
-              tutor.tutor_radius,
+            experience:
+              tutor.experience,
 
-            // ------------------------------------------
+            teaching_mode:
+              tutor.teaching_mode,
+
+            // --------------------------------------------
             // COURSE
-            // ------------------------------------------
+            // --------------------------------------------
+
+            course_id:
+              tutor.course_id,
 
             institute:
               tutor.institute,
@@ -1253,16 +1393,16 @@ const StudentFindTutor = ({ navigation, route }) => {
             grade:
               tutor.grade,
 
-            // ------------------------------------------
+            // --------------------------------------------
             // RATE
-            // ------------------------------------------
+            // --------------------------------------------
 
             hourly_rate:
               tutor.hourly_rate,
 
-            // ------------------------------------------
+            // --------------------------------------------
             // FEEDBACK
-            // ------------------------------------------
+            // --------------------------------------------
 
             average_rating:
               tutor.average_rating,
@@ -1270,30 +1410,40 @@ const StudentFindTutor = ({ navigation, route }) => {
             total_reviews:
               tutor.total_reviews,
 
-            // ------------------------------------------
+            // --------------------------------------------
             // SLOT
-            // ------------------------------------------
+            // --------------------------------------------
 
             day:
-              slot.day,
+              slot?.day ||
+              "",
 
             time:
-              slot.time,
+              slot?.time ||
+              "",
 
             is_available:
-              slot.is_available,
+              slot?.is_available !==
+              false,
 
             availability_message:
-              slot.availability_message,
+              slot?.availability_message ||
+              "Available",
+
+            request_type:
+              slot?.request_type ||
+              "",
+
+            class_date:
+              slot?.class_date ||
+              null,
           })
         );
       }
     );
 
   // ======================================================
-  // SEARCH ONLY
-  //
-  // SORTING IS DONE BY BACKEND
+  // SEARCH FILTER
   // ======================================================
 
   const filteredTutors =
@@ -1301,7 +1451,8 @@ const StudentFindTutor = ({ navigation, route }) => {
       (item) => {
         const tutorName =
           String(
-            item?.tutor_name || ""
+            item?.tutor_name ||
+              ""
           ).toLowerCase();
 
         const searchText =
@@ -1338,13 +1489,15 @@ const StudentFindTutor = ({ navigation, route }) => {
         ]}
         onPress={() => {
           if (
-            sortBy === option.key
+            sortBy ===
+            option.key
           ) {
             return;
           }
 
           /*
-           * Backend performs sorting.
+           * Backend performs
+           * the actual sorting.
            */
           setSortBy(
             option.key
@@ -1372,7 +1525,8 @@ const StudentFindTutor = ({ navigation, route }) => {
     item,
   }) => {
     const unavailable =
-      item?.is_available === false;
+      item?.is_available ===
+      false;
 
     const selected =
       isTutorSelected(
@@ -1474,7 +1628,7 @@ const StudentFindTutor = ({ navigation, route }) => {
           </View>
 
           {/* ==========================================
-              SELECTION CHECKBOX
+              CHECKBOX
           ========================================== */}
 
           <View
@@ -1503,6 +1657,8 @@ const StudentFindTutor = ({ navigation, route }) => {
             styles.tutorInfoRow
           }
         >
+          {/* INSTITUTE */}
+
           <View
             style={
               styles.infoItem
@@ -1523,6 +1679,8 @@ const StudentFindTutor = ({ navigation, route }) => {
               {institute}
             </Text>
           </View>
+
+          {/* GRADE */}
 
           <View
             style={
@@ -1546,7 +1704,62 @@ const StudentFindTutor = ({ navigation, route }) => {
         </View>
 
         {/* ==========================================
-            HOURLY FEE
+            QUALIFICATION / EXPERIENCE
+        ========================================== */}
+
+        <View
+          style={
+            styles.tutorInfoRow
+          }
+        >
+          <View
+            style={
+              styles.infoItem
+            }
+          >
+            <Icon
+              name="school"
+              size={15}
+              color="#64748B"
+            />
+
+            <Text
+              style={
+                styles.infoText
+              }
+              numberOfLines={1}
+            >
+              {item?.qualification ||
+                "Qualification unavailable"}
+            </Text>
+          </View>
+
+          <View
+            style={
+              styles.infoItem
+            }
+          >
+            <Icon
+              name="work-history"
+              size={15}
+              color="#64748B"
+            />
+
+            <Text
+              style={
+                styles.infoText
+              }
+              numberOfLines={1}
+            >
+              {item?.experience != null
+                ? `${item.experience} years`
+                : "Experience N/A"}
+            </Text>
+          </View>
+        </View>
+
+        {/* ==========================================
+            PAYMENT
         ========================================== */}
 
         <View
@@ -1556,8 +1769,10 @@ const StudentFindTutor = ({ navigation, route }) => {
         >
           <Icon
             name="payments"
-            size={16}
-            color={PRIMARY_COLOR}
+            size={17}
+            color={
+              PRIMARY_COLOR
+            }
           />
 
           <Text
@@ -1571,11 +1786,14 @@ const StudentFindTutor = ({ navigation, route }) => {
 
         {/* ==========================================
             LOCATION
+            IMPORTANT:
+            NO DISTANCE
+            NO RADIUS
         ========================================== */}
 
         <View
           style={
-            styles.metaContainer
+            styles.locationContainer
           }
         >
           <View
@@ -1585,7 +1803,7 @@ const StudentFindTutor = ({ navigation, route }) => {
           >
             <Icon
               name="place"
-              size={16}
+              size={17}
               color="#64748B"
             />
 
@@ -1593,33 +1811,32 @@ const StudentFindTutor = ({ navigation, route }) => {
               style={
                 styles.metaText
               }
-              numberOfLines={1}
+              numberOfLines={2}
             >
               {item?.location ||
-                "Location unavailable"}
+                "Tutor location unavailable"}
             </Text>
           </View>
 
           <View
             style={
-              styles.metaRow
+              styles.modeBadge
             }
           >
             <Icon
-              name="near-me"
-              size={16}
-              color="#64748B"
+              name="home"
+              size={14}
+              color={
+                PRIMARY_COLOR
+              }
             />
 
             <Text
               style={
-                styles.metaText
+                styles.modeBadgeText
               }
             >
-              {Number(
-                item?.distance || 0
-              ).toFixed(2)}{" "}
-              km away
+              Non-Visiting
             </Text>
           </View>
         </View>
@@ -1678,6 +1895,8 @@ const StudentFindTutor = ({ navigation, route }) => {
               styles.slotDetailGrid
             }
           >
+            {/* DAY */}
+
             <View
               style={
                 styles.slotDetailItem
@@ -1698,6 +1917,8 @@ const StudentFindTutor = ({ navigation, route }) => {
                   "Day"}
               </Text>
             </View>
+
+            {/* TIME */}
 
             <View
               style={
@@ -1768,9 +1989,13 @@ const StudentFindTutor = ({ navigation, route }) => {
               styles.requestButtonDisabled,
           ]}
           activeOpacity={0.8}
-          disabled={unavailable}
+          disabled={
+            unavailable
+          }
           onPress={() =>
-            toggleTutorSelection(item)
+            toggleTutorSelection(
+              item
+            )
           }
         >
           <Icon
@@ -1852,7 +2077,7 @@ const StudentFindTutor = ({ navigation, route }) => {
               styles.headerSubtitle
             }
           >
-            TUTOR DISCOVERY
+            NON-VISITING TUTOR
           </Text>
 
           <Text
@@ -1871,6 +2096,52 @@ const StudentFindTutor = ({ navigation, route }) => {
             width: 40,
           }}
         />
+      </View>
+
+      {/* ================================================
+          NON-VISITING INFORMATION
+      ================================================ */}
+
+      <View
+        style={
+          styles.modeInformation
+        }
+      >
+        <View
+          style={
+            styles.modeInformationIcon
+          }
+        >
+          <Icon
+            name="home"
+            size={18}
+            color={
+              PRIMARY_COLOR
+            }
+          />
+        </View>
+
+        <View
+          style={
+            styles.modeInformationTextContainer
+          }
+        >
+          <Text
+            style={
+              styles.modeInformationTitle
+            }
+          >
+            Tutor's Location
+          </Text>
+
+          <Text
+            style={
+              styles.modeInformationText
+            }
+          >
+            You will visit the tutor's location for your classes.
+          </Text>
+        </View>
       </View>
 
       {/* ================================================
@@ -2081,7 +2352,7 @@ const StudentFindTutor = ({ navigation, route }) => {
               styles.loadingText
             }
           >
-            Finding tutors nearby...
+            Finding available tutors...
           </Text>
         </View>
       ) : (
@@ -2138,12 +2409,9 @@ const StudentFindTutor = ({ navigation, route }) => {
                   styles.emptySubtext
                 }
               >
-                We couldn't find
-                matches for your
-                selection. Try
-                changing the
-                search or sort
-                option.
+                {search
+                  ? "No tutor matches your search."
+                  : "No approved Non-Visiting tutors are available for this course."}
               </Text>
             </View>
           }
@@ -2151,7 +2419,7 @@ const StudentFindTutor = ({ navigation, route }) => {
       )}
 
       {/* ================================================
-          BOOKING MODAL
+          REQUEST MODAL
       ================================================ */}
 
       <Modal
@@ -2254,7 +2522,10 @@ const StudentFindTutor = ({ navigation, route }) => {
                 }
               >
                 {selectedTutors.map(
-                  (tutor, index) => (
+                  (
+                    tutor,
+                    index
+                  ) => (
                     <View
                       key={`${tutor.tutor_id}-${index}`}
                       style={
@@ -2388,6 +2659,31 @@ const StudentFindTutor = ({ navigation, route }) => {
                     {selectedRequestTime}
                   </Text>
                 </View>
+
+                {/* NON-VISITING INFO */}
+
+                <View
+                  style={
+                    styles.summaryModeRow
+                  }
+                >
+                  <Icon
+                    name="home"
+                    size={16}
+                    color={
+                      PRIMARY_COLOR
+                  }
+
+                  />
+
+                  <Text
+                    style={
+                      styles.summaryModeText
+                    }
+                  >
+                    Student will visit tutor
+                  </Text>
+                </View>
               </View>
 
               {/* ==========================================
@@ -2402,7 +2698,9 @@ const StudentFindTutor = ({ navigation, route }) => {
                 <Icon
                   name="info-outline"
                   size={18}
-                  color={PRIMARY_COLOR}
+                  color={
+                    PRIMARY_COLOR
+                  }
                 />
 
                 <Text
@@ -2714,11 +3012,11 @@ const styles = StyleSheet.create({
   },
 
   headerSubtitle: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#64748B",
+    fontSize: 10,
+    fontWeight: "700",
+    color: PRIMARY_COLOR,
     textTransform: "uppercase",
-    letterSpacing: 0.5,
+    letterSpacing: 0.6,
   },
 
   headerTitle: {
@@ -2726,6 +3024,49 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#0F172A",
     marginTop: 2,
+  },
+
+  // ====================================================
+  // MODE INFORMATION
+  // ====================================================
+
+  modeInformation: {
+    marginHorizontal: 16,
+    marginTop: 12,
+    padding: 11,
+    borderRadius: 12,
+    backgroundColor: "#F0FDFA",
+    borderWidth: 1,
+    borderColor: "#CCFBF1",
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  modeInformationIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  modeInformationTextContainer: {
+    flex: 1,
+    marginLeft: 9,
+  },
+
+  modeInformationTitle: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#115E59",
+  },
+
+  modeInformationText: {
+    fontSize: 11,
+    color: "#0F766E",
+    marginTop: 2,
+    lineHeight: 16,
   },
 
   // ====================================================
@@ -3072,7 +3413,7 @@ const styles = StyleSheet.create({
   feeRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 8,
+    marginTop: 10,
   },
 
   feeText: {
@@ -3086,20 +3427,21 @@ const styles = StyleSheet.create({
   // LOCATION
   // ====================================================
 
-  metaContainer: {
+  locationContainer: {
+    marginTop: 9,
+    paddingTop: 9,
+    borderTopWidth: 1,
+    borderTopColor: "#F1F5F9",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
   },
 
   metaRow: {
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
+    marginRight: 8,
   },
 
   metaText: {
@@ -3107,6 +3449,24 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#475569",
     marginLeft: 6,
+  },
+
+  modeBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 8,
+    backgroundColor: "#F0FDFA",
+    borderWidth: 1,
+    borderColor: "#CCFBF1",
+  },
+
+  modeBadgeText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#0F766E",
+    marginLeft: 4,
   },
 
   // ====================================================
@@ -3447,6 +3807,22 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
 
+  summaryModeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 6,
+    paddingTop: 7,
+    borderTopWidth: 1,
+    borderTopColor: "#E2E8F0",
+  },
+
+  summaryModeText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#0F766E",
+    marginLeft: 8,
+  },
+
   // ====================================================
   // INFO NOTICE
   // ====================================================
@@ -3621,5 +3997,4 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
-
-export default StudentFindTutor;
+export default StudentFindTutorNonVisiting;

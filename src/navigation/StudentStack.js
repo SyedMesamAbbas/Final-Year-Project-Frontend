@@ -9,9 +9,10 @@ import StudentCourses from "../screens/Student/StudentCourses";
 import StudentAddCourses from "../screens/Student/StudentAddCourses";
 import MyTutor from "../screens/Student/MyTutor"
 import Notification from "../screens/Student/Notification";
-import StudentHistory from "../screens/Student/StudentHistory"
-import StudentProfile from "../screens/Student/StudentProfile"
-import StudentFee from "../screens/Student/StudentFee"
+import StudentHistory from "../screens/Student/StudentHistory";
+import StudentProfile from "../screens/Student/StudentProfile";
+import StudentFee from "../screens/Student/StudentFee";
+import StudentFindTutorNonVisting from "../screens/Student/StudentFindTutorNonVisiting"
 
 const Stack = createNativeStackNavigator();
 
@@ -23,6 +24,7 @@ const StudentDrawerNavigator = () => {
       <Stack.Screen name="StudentCourses" component={StudentCourses} />
       <Stack.Screen name="StudentAddCourses" component={StudentAddCourses} />
       <Stack.Screen name="StudentFindTutor" component={StudentFindTutor} />
+      <Stack.Screen name="StudentFindTutorNonVisting" component={StudentFindTutorNonVisting} />
       <Stack.Screen name="StudentAllClasses" component={StudentAllClasses} />
       <Stack.Screen name="TodayClasses" component={TodayClasses} />
       <Stack.Screen name="Notification" component={Notification} />
