@@ -310,15 +310,22 @@ const TutorHome = ({ navigation }) => {
         contentContainerStyle={{ paddingBottom: 110 }}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.titleContainer}>
+        {/* <View style={styles.titleContainer}>
           <Text style={styles.welcome}>Select Availability</Text>
           <Text style={styles.subtitle}>
             Tap slots to update your weekly teaching schedule.
           </Text>
+        </View> */}
+
+        <View style={styles.titleContainer}>
+          <Text style={styles.welcome}>Manage Availability</Text>
+            <Text style={styles.subtitle}>
+              View and manage your teaching schedule, available timings, and sessions.
+            </Text>
         </View>
 
         {/* ================= TOGGLE ================= */}
-        <View style={styles.toggleContainer}>
+        {/* <View style={styles.toggleContainer}>
           <TouchableOpacity
             style={[
               styles.toggleBtn,
@@ -354,7 +361,7 @@ const TutorHome = ({ navigation }) => {
               Full Time
             </Text>
           </TouchableOpacity>
-        </View>
+        </View>*/}
 
         {/* ================= DATE PICKERS ================= */}
         {teachMode === "specific" && (

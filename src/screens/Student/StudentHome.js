@@ -314,7 +314,7 @@ const StudentHome = ({ navigation }) => {
         </View>
 
         {/* MODE TOGGLE */}
-        <View style={styles.toggleContainer}>
+        {/*<View style={styles.toggleContainer}>
           <TouchableOpacity
             activeOpacity={0.8}
             style={[
@@ -362,7 +362,7 @@ const StudentHome = ({ navigation }) => {
               Specific Range
             </Text>
           </TouchableOpacity>
-        </View>
+        </View>*/}
 
         {/* DATE PICKERS CARD */}
         {teachMode === "specific" && (
