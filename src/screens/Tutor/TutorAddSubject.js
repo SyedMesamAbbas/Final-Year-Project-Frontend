@@ -701,7 +701,7 @@ const TutorAddSubject = ({ navigation }) => {
 
                   <TextInput
                     style={styles.textInput}
-                    placeholder="e.g. COMSATS University"
+                    placeholder="e.g. BIIT University"
                     placeholderTextColor="#94A3B8"
                     value={institute}
                     maxLength={150}

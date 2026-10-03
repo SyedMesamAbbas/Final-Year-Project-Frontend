@@ -13,6 +13,7 @@ import AdminProfileScreen from "../screens/Admin/AdminProfileScreen";
 import AdminTutorDetailScreen from "../screens/Admin/AdminTutorDetailScreen"
 import AdminTutorCourses from "../screens/Admin/TutorCourses"
 import AdminApprovedTutor from "../screens/Admin/AdminApprovedTutor"
+import AdminVenueManagement from "../screens/Admin/AdminVenueManagement"
 
 
 const Stack = createNativeStackNavigator();
@@ -37,6 +38,7 @@ const AdminStack = () => {
       <Stack.Screen name="AdminTutorDetailScreen" component={AdminTutorDetailScreen} />
       <Stack.Screen name="AdminTutorCourses" component={AdminTutorCourses} />
       <Stack.Screen name="AdminApprovedTutor" component={AdminApprovedTutor} />
+      <Stack.Screen name="AdminVenueManagement" component={AdminVenueManagement} />
     </Stack.Navigator>
   );
 };

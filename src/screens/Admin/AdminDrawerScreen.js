@@ -43,6 +43,7 @@ const primaryMenuItems = [
   { id: "2", title: "Blocked Tutor", icon: "block", screen: "BlockList", badge: null },
   { id: "3", title: "Feedback", icon: "rate-review", screen: "Feedback", badge: null },
   { id: "4", title: "Blocked Student", icon: "person-off", screen: "AdminBlockedStudent", badge: null },
+  { id: "5", title: "Venue Management", icon: "location-on", screen: "AdminVenueManagement" },
   // { id: "4", title: "Tutor Courses", icon: "book", screen: "AdminTutorCourses" },
 ];
 
