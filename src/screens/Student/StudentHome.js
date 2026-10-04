@@ -256,7 +256,7 @@ const StudentHome = ({ navigation }) => {
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
       {/* HEADER */}
-      <View style={styles.header}>
+      {/*<View style={styles.header}>
         <TouchableOpacity
           style={styles.iconButton}
           onPress={() => navigation.navigate("StudentDrawer")}
@@ -289,6 +289,52 @@ const StudentHome = ({ navigation }) => {
               </Text>
             </View>
           )}
+        </View>
+      </View>*/}
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={() => navigation.navigate("StudentDrawer")}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Icon name="menu" size={24} color="#1E293B" />
+        </TouchableOpacity>
+
+        <View style={styles.headerCenter}>
+          <Image
+            source={require("../../../assets/images/logo.png")}
+            style={styles.logoImage}
+          />
+          <Text style={styles.logoText}>House of Tutor</Text>
+        </View>
+
+        {/* Right Header Action Icons */}
+        <View style={styles.rightIconsContainer}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => navigation.navigate("StudentAddFiend")}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Icon name="person-add" size={24} color="#1E293B" />
+          </TouchableOpacity>
+
+          <View style={styles.notificationContainer}>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => navigation.navigate("Notification")}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Icon name="notifications-none" size={24} color="#1E293B" />
+            </TouchableOpacity>
+
+            {notificationCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>
+                  {notificationCount > 99 ? "99+" : notificationCount}
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
       </View>
 
@@ -563,6 +609,11 @@ const styles = StyleSheet.create({
         elevation: 2,
       },
     }),
+  },
+  rightIconsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8, // Adjust spacing between the icons as needed
   },
   iconButton: {
     width: 40,

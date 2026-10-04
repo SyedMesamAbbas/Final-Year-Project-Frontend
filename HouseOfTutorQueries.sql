@@ -404,12 +404,11 @@ Select * from Student_Course_Fee
 Select * from Student_Schedule
 Select * from Request
 Select * from Payment
+Select * from LT_Room
+Select * from LT_Room_Schedule
+Select * from Student_Friend
 
-Delete Payment
-Delete Users where user_id=1010
-Delete Student where user_id=1009
-Delete Users where user_id=1010
-Delete Tutor where user_id=1010
+update Student_Friend set status='Pending' where friendship_id=1
 Update Payment set tutor_status='Pending' where fee_id=5
 Update Payment set tutor_status='Received' where fee_id=5
 update Student set fee_responsibility='ByMe' where user_id=7

@@ -44,6 +44,12 @@ const MENU_ITEMS = [
     route: "StudentFee",
     description: "View and manage your course fee",
   },
+  {
+    label: "Friend List",
+    icon: "account-balance-wallet",
+    route: "StudentFriendList",
+    description: "View and manage your course fee",
+  },
 ];
 
 const StudentDrawer = ({ navigation }) => {
