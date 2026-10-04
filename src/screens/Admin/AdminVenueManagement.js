@@ -15,307 +15,185 @@ import {
   KeyboardAvoidingView,
   Platform,
   RefreshControl,
+  LayoutAnimation,
+  UIManager,
+  Image,
 } from 'react-native';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {BASE_URL} from '../../config/api';
+import colors from '../utils/colors';
 
+// Enable LayoutAnimation for Android
+if (
+  Platform.OS === 'android' &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 // ============================================================
-// DAYS
+// CONSTANTS FOR SCHEDULE GRID
 // ============================================================
 
-const DAYS = [
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-  'Sunday',
+const DAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+const DAYS_FULL = {
+  Mon: 'Monday',
+  Tue: 'Tuesday',
+  Wed: 'Wednesday',
+  Thu: 'Thursday',
+  Fri: 'Friday',
+  Sat: 'Saturday',
+  Sun: 'Sunday',
+};
+
+const TIME_SLOTS = [
+  '8:00-9:00 am',
+  '9:00-10:00 am',
+  '10:00-11:00 am',
+  '11:00-12:00 pm',
+  '12:00-1:00 pm',
+  '1:00-2:00 pm',
+  '2:00-3:00 pm',
+  '3:00-4:00 pm',
+  '4:00-5:00 pm',
+  '5:00-6:00 pm',
+  '6:00-7:00 pm',
+  '7:00-8:00 pm',
+  '8:00-9:00 pm',
+  '9:00-10:00 pm',
 ];
-
 
 // ============================================================
 // MAIN SCREEN
 // ============================================================
 
-const AdminAddLTRoom = ({navigation}) => {
-
+const AdminVenueManagement = ({navigation}) => {
   // ============================================================
-  // LT ROOM LIST
+  // LT ROOM LIST & EXPANDABLE STATES
   // ============================================================
 
   const [rooms, setRooms] = useState([]);
-
   const [roomsLoading, setRoomsLoading] = useState(true);
-
   const [refreshing, setRefreshing] = useState(false);
-
-
-  // ============================================================
-  // ADD ROOM MODAL
-  // ============================================================
-
-  const [addRoomModalVisible, setAddRoomModalVisible] =
-    useState(false);
-
+  const [expandedRoomIds, setExpandedRoomIds] = useState({});
 
   // ============================================================
-  // ROOM FORM DATA
+  // ADD ROOM MODAL & FORM DATA
   // ============================================================
 
+  const [addRoomModalVisible, setAddRoomModalVisible] = useState(false);
   const [roomName, setRoomName] = useState('');
-
   const [capacity, setCapacity] = useState('');
 
-
   // ============================================================
-  // SCHEDULE DATA
+  // SCHEDULE DATA & GRID STATE
   // ============================================================
 
   const [schedules, setSchedules] = useState([]);
 
-  const [selectedDay, setSelectedDay] = useState('Monday');
-
-  const [time, setTime] = useState('');
+  // Selected slots stored as key "DayIndex-SlotIndex"
+  // Example: "0-2"
+  const [selectedSlots, setSelectedSlots] = useState({});
 
   const [startDate, setStartDate] = useState('');
-
   const [endDate, setEndDate] = useState('');
 
-
   // ============================================================
-  // SCHEDULE MODAL
-  // ============================================================
-
-  const [scheduleModalVisible, setScheduleModalVisible] =
-    useState(false);
-
-
-  // ============================================================
-  // ADD ROOM LOADING
+  // SCHEDULE MODAL & SAVING STATE
   // ============================================================
 
+  const [scheduleModalVisible, setScheduleModalVisible] = useState(false);
   const [savingRoom, setSavingRoom] = useState(false);
-
 
   // ============================================================
   // GET TOKEN
   // ============================================================
 
   const getToken = async () => {
-
-    const token =
-      await AsyncStorage.getItem('token');
+    const token = await AsyncStorage.getItem('token');
 
     if (!token) {
-
-      Alert.alert(
-        'Session Expired',
-        'Please login again.',
-      );
-
+      Alert.alert('Session Expired', 'Please login again.');
       return null;
     }
 
     return token;
   };
 
-
   // ============================================================
   // LOAD ALL LT ROOMS
   // ============================================================
 
   const getLTRooms = useCallback(async () => {
-
     try {
-
       setRoomsLoading(true);
-
-
-      // ========================================================
-      // GET TOKEN
-      // ========================================================
 
       const token = await getToken();
 
       if (!token) {
-
         setRoomsLoading(false);
-
         return;
       }
 
+      const url = `${BASE_URL}/Admin/get-lt-rooms`;
 
-      // ========================================================
-      // API URL
-      // ========================================================
-
-      const url =
-        `${BASE_URL}/Admin/get-lt-rooms`;
-
-
-      console.log(
-        '========================================',
-      );
-
-      console.log(
-        'GET LT ROOMS',
-      );
-
-      console.log(
-        'API:',
-        url,
-      );
-
-      console.log(
-        '========================================',
-      );
-
-
-      // ========================================================
-      // API REQUEST
-      // ========================================================
-
-      const response = await fetch(
-        url,
-        {
-          method: 'GET',
-
-          headers: {
-            Accept: 'application/json',
-
-            Authorization: `Bearer ${token}`,
-          },
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
 
-
-      // ========================================================
-      // RESPONSE
-      // ========================================================
-
-      const responseText =
-        await response.text();
-
-
-      console.log(
-        'GET LT ROOMS STATUS:',
-        response.status,
-      );
-
-      console.log(
-        'GET LT ROOMS RESPONSE:',
-        responseText,
-      );
-
+      const responseText = await response.text();
 
       let data = {};
 
       try {
-
-        data = responseText
-          ? JSON.parse(responseText)
-          : {};
-
+        data = responseText ? JSON.parse(responseText) : {};
       } catch (error) {
-
-        console.log(
-          'JSON PARSE ERROR:',
-          error,
-        );
-
+        console.log('JSON PARSE ERROR:', error);
         data = {};
       }
 
-
-      // ========================================================
-      // SUCCESS
-      // ========================================================
-
       if (response.ok) {
-
-        const roomList =
-          Array.isArray(data.rooms)
-            ? data.rooms
-            : [];
+        const roomList = Array.isArray(data.rooms) ? data.rooms : [];
 
         setRooms(roomList);
-
         return;
       }
 
-
-      // ========================================================
-      // ERROR
-      // ========================================================
-
-      let errorMessage =
+      const errorMessage =
+        data.message ||
+        data.error ||
+        responseText ||
         'Unable to load LT Rooms.';
 
-
-      if (data.message) {
-
-        errorMessage =
-          data.message;
-
-      } else if (data.error) {
-
-        errorMessage =
-          data.error;
-
-      } else if (responseText) {
-
-        errorMessage =
-          responseText;
-      }
-
-
-      Alert.alert(
-        'Error',
-        errorMessage,
-      );
-
+      Alert.alert('Error', errorMessage);
     } catch (error) {
-
-      console.log(
-        'GET LT ROOMS ERROR:',
-        error,
-      );
-
+      console.log('GET LT ROOMS ERROR:', error);
 
       Alert.alert(
         'Network Error',
         'Unable to connect with server. Please check your backend and network connection.',
       );
-
     } finally {
-
       setRoomsLoading(false);
     }
-
   }, []);
 
-
-  // ============================================================
-  // LOAD ROOMS WHEN SCREEN OPENS
-  // ============================================================
-
   useEffect(() => {
-
     getLTRooms();
-
   }, [getLTRooms]);
-
 
   // ============================================================
   // PULL TO REFRESH
   // ============================================================
 
   const onRefresh = async () => {
-
     setRefreshing(true);
 
     await getLTRooms();
@@ -323,287 +201,140 @@ const AdminAddLTRoom = ({navigation}) => {
     setRefreshing(false);
   };
 
+  // ============================================================
+  // ACCORDION / TOGGLE ROOM SCHEDULE
+  // ============================================================
+
+  const toggleRoomExpand = roomId => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+
+    setExpandedRoomIds(prev => ({
+      ...prev,
+      [roomId]: !prev[roomId],
+    }));
+  };
 
   // ============================================================
-  // OPEN ADD ROOM MODAL
+  // MODAL CONTROLS & FORM RESETS
   // ============================================================
 
   const openAddRoomModal = () => {
-
     resetRoomForm();
-
     setAddRoomModalVisible(true);
   };
 
-
-  // ============================================================
-  // CLOSE ADD ROOM MODAL
-  // ============================================================
-
   const closeAddRoomModal = () => {
-
     if (savingRoom) {
       return;
     }
 
     setAddRoomModalVisible(false);
-
     resetRoomForm();
   };
 
-
-  // ============================================================
-  // RESET ROOM FORM
-  // ============================================================
-
   const resetRoomForm = () => {
-
     setRoomName('');
-
     setCapacity('');
-
     setSchedules([]);
-
-    resetScheduleForm();
+    setSelectedSlots({});
+    setStartDate('');
+    setEndDate('');
   };
 
-
   // ============================================================
-  // OPEN SCHEDULE POPUP
+  // OPEN SCHEDULE GRID
   // ============================================================
 
   const openSchedulePopup = () => {
-
     if (!roomName.trim()) {
-
-      Alert.alert(
-        'Required',
-        'Please enter venue name first.',
-      );
-
+      Alert.alert('Required', 'Please enter venue name first.');
       return;
     }
-
 
     if (!capacity.trim()) {
-
-      Alert.alert(
-        'Required',
-        'Please enter venue capacity first.',
-      );
-
+      Alert.alert('Required', 'Please enter venue capacity first.');
       return;
     }
-
 
     if (
       isNaN(parseInt(capacity, 10)) ||
       parseInt(capacity, 10) <= 0
     ) {
-
       Alert.alert(
         'Invalid Capacity',
         'Capacity must be greater than 0.',
       );
-
       return;
     }
-
 
     setScheduleModalVisible(true);
   };
 
-
   // ============================================================
-  // RESET SCHEDULE FORM
+  // GRID SLOT TOGGLE & ACTIONS
   // ============================================================
 
-  const resetScheduleForm = () => {
+  const toggleSlot = (dayIdx, slotIdx) => {
+    const key = `${dayIdx}-${slotIdx}`;
 
-    setSelectedDay('Monday');
+    setSelectedSlots(prev => {
+      const updated = {...prev};
 
-    setTime('');
+      if (updated[key]) {
+        delete updated[key];
+      } else {
+        updated[key] = true;
+      }
 
-    setStartDate('');
-
-    setEndDate('');
+      return updated;
+    });
   };
 
+  const clearAllSlots = () => {
+    setSelectedSlots({});
+  };
 
   // ============================================================
-  // ADD SCHEDULE
+  // CONFIRM GRID SCHEDULE
   // ============================================================
 
-  const addSchedule = () => {
+  const confirmGridSchedule = () => {
+    const selectedKeys = Object.keys(selectedSlots);
 
-    // ==========================================================
-    // VALIDATE TIME
-    // ==========================================================
-
-    if (!time.trim()) {
-
+    if (selectedKeys.length === 0) {
       Alert.alert(
-        'Required',
-        'Please enter schedule time.',
+        'No Slot Selected',
+        'Please click on one or more slots in the grid.',
       );
 
       return;
     }
 
+    const newSchedules = selectedKeys.map(key => {
+      const [dayIdx, slotIdx] = key.split('-').map(Number);
 
-    // ==========================================================
-    // VALIDATE START DATE
-    // ==========================================================
+      return {
+        day: DAYS_FULL[DAYS_SHORT[dayIdx]],
+        time: TIME_SLOTS[slotIdx],
+        startDate: startDate.trim() || null,
+        endDate: endDate.trim() || null,
+      };
+    });
 
-    if (!startDate.trim()) {
-
-      Alert.alert(
-        'Required',
-        'Please enter start date.',
-      );
-
-      return;
-    }
-
-
-    // ==========================================================
-    // VALIDATE END DATE
-    // ==========================================================
-
-    if (!endDate.trim()) {
-
-      Alert.alert(
-        'Required',
-        'Please enter end date.',
-      );
-
-      return;
-    }
-
-
-    // ==========================================================
-    // DATE FORMAT
-    // ==========================================================
-
-    const dateRegex =
-      /^\d{4}-\d{2}-\d{2}$/;
-
-
-    if (!dateRegex.test(startDate.trim())) {
-
-      Alert.alert(
-        'Invalid Date',
-        'Start date must be in YYYY-MM-DD format.\n\nExample: 2026-10-05',
-      );
-
-      return;
-    }
-
-
-    if (!dateRegex.test(endDate.trim())) {
-
-      Alert.alert(
-        'Invalid Date',
-        'End date must be in YYYY-MM-DD format.\n\nExample: 2027-02-28',
-      );
-
-      return;
-    }
-
-
-    // ==========================================================
-    // CHECK DATE ORDER
-    // ==========================================================
-
-    if (
-      new Date(startDate.trim()) >
-      new Date(endDate.trim())
-    ) {
-
-      Alert.alert(
-        'Invalid Date',
-        'Start date cannot be greater than end date.',
-      );
-
-      return;
-    }
-
-
-    // ==========================================================
-    // CHECK DUPLICATE
-    // ==========================================================
-
-    const duplicate =
-      schedules.some(
-        item =>
-          item.day.toLowerCase() ===
-            selectedDay.toLowerCase() &&
-          item.time.toLowerCase() ===
-            time.trim().toLowerCase(),
-      );
-
-
-    if (duplicate) {
-
-      Alert.alert(
-        'Duplicate Schedule',
-        'This day and time schedule has already been added.',
-      );
-
-      return;
-    }
-
-
-    // ==========================================================
-    // NEW SCHEDULE
-    // ==========================================================
-
-    const newSchedule = {
-
-      day: selectedDay,
-
-      time: time.trim(),
-
-      startDate:
-        startDate.trim(),
-
-      endDate:
-        endDate.trim(),
-    };
-
-
-    // ==========================================================
-    // ADD
-    // ==========================================================
-
-    setSchedules(prev => [
-      ...prev,
-      newSchedule,
-    ]);
-
-
-    // ==========================================================
-    // RESET
-    // ==========================================================
-
-    resetScheduleForm();
-
+    setSchedules(newSchedules);
     setScheduleModalVisible(false);
 
-
     Alert.alert(
-      'Schedule Added',
-      `${selectedDay} schedule has been added successfully.`,
+      'Schedules Selected',
+      `${newSchedules.length} slot(s) added to the schedule list.`,
     );
   };
-
 
   // ============================================================
   // REMOVE SCHEDULE
   // ============================================================
 
   const removeSchedule = index => {
-
     Alert.alert(
       'Remove Schedule',
       'Are you sure you want to remove this schedule?',
@@ -612,18 +343,12 @@ const AdminAddLTRoom = ({navigation}) => {
           text: 'Cancel',
           style: 'cancel',
         },
-
         {
           text: 'Remove',
           style: 'destructive',
-
           onPress: () => {
-
             setSchedules(prev =>
-              prev.filter(
-                (_, scheduleIndex) =>
-                  scheduleIndex !== index,
-              ),
+              prev.filter((_, i) => i !== index),
             );
           },
         },
@@ -631,69 +356,30 @@ const AdminAddLTRoom = ({navigation}) => {
     );
   };
 
-
   // ============================================================
-  // FORMAT DATE
+  // FORMAT DATE FOR API
   // ============================================================
 
-  const formatDateForApi = date => {
-
-    if (!date) {
-      return null;
-    }
-
-    return date.trim();
-  };
-
+  const formatDateForApi = date => (date ? date.trim() : null);
 
   // ============================================================
   // SAVE LT ROOM
   // ============================================================
 
   const saveLTRoom = async () => {
-
-    // ==========================================================
-    // VALIDATE ROOM NAME
-    // ==========================================================
-
     if (!roomName.trim()) {
-
-      Alert.alert(
-        'Required',
-        'Please enter venue name.',
-      );
-
+      Alert.alert('Required', 'Please enter venue name.');
       return;
     }
-
-
-    // ==========================================================
-    // VALIDATE CAPACITY
-    // ==========================================================
 
     if (!capacity.trim()) {
-
-      Alert.alert(
-        'Required',
-        'Please enter venue capacity.',
-      );
-
+      Alert.alert('Required', 'Please enter venue capacity.');
       return;
     }
 
+    const numericCapacity = parseInt(capacity.trim(), 10);
 
-    const numericCapacity =
-      parseInt(
-        capacity.trim(),
-        10,
-      );
-
-
-    if (
-      isNaN(numericCapacity) ||
-      numericCapacity <= 0
-    ) {
-
+    if (isNaN(numericCapacity) || numericCapacity <= 0) {
       Alert.alert(
         'Invalid Capacity',
         'Please enter a valid capacity greater than 0.',
@@ -702,194 +388,69 @@ const AdminAddLTRoom = ({navigation}) => {
       return;
     }
 
-
-    // ==========================================================
-    // VALIDATE SCHEDULE
-    // ==========================================================
-
     if (schedules.length === 0) {
-
       Alert.alert(
         'Schedule Required',
-        'Please add at least one available schedule.',
+        'Please add at least one available schedule slot.',
       );
 
       return;
     }
 
-
     try {
-
       setSavingRoom(true);
 
-
-      // ========================================================
-      // TOKEN
-      // ========================================================
-
-      const token =
-        await AsyncStorage.getItem('token');
-
+      const token = await AsyncStorage.getItem('token');
 
       if (!token) {
-
-        Alert.alert(
-          'Session Expired',
-          'Please login again.',
-        );
-
+        Alert.alert('Session Expired', 'Please login again.');
         setSavingRoom(false);
-
         return;
       }
 
-
-      // ========================================================
-      // REQUEST BODY
-      // ========================================================
-
       const body = {
-
-        roomName:
-          roomName.trim(),
-
-        capacity:
-          numericCapacity,
-
-        schedules:
-          schedules.map(item => ({
-
-            day:
-              item.day,
-
-            time:
-              item.time,
-
-            startDate:
-              formatDateForApi(
-                item.startDate,
-              ),
-
-            endDate:
-              formatDateForApi(
-                item.endDate,
-              ),
-          })),
+        roomName: roomName.trim(),
+        capacity: numericCapacity,
+        schedules: schedules.map(item => ({
+          day: item.day,
+          time: item.time,
+          startDate: formatDateForApi(item.startDate),
+          endDate: formatDateForApi(item.endDate),
+        })),
       };
 
+      const response = await fetch(`${BASE_URL}/Admin/add-lt-room`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+      });
 
-      console.log(
-        '========================================',
-      );
-
-      console.log(
-        'ADD LT ROOM',
-      );
-
-      console.log(
-        'API:',
-        `${BASE_URL}/Admin/add-lt-room`,
-      );
-
-      console.log(
-        'REQUEST BODY:',
-        body,
-      );
-
-      console.log(
-        '========================================',
-      );
-
-
-      // ========================================================
-      // POST API
-      // ========================================================
-
-      const response =
-        await fetch(
-          `${BASE_URL}/Admin/add-lt-room`,
-          {
-            method: 'POST',
-
-            headers: {
-
-              'Content-Type':
-                'application/json',
-
-              Accept:
-                'application/json',
-
-              Authorization:
-                `Bearer ${token}`,
-            },
-
-            body:
-              JSON.stringify(body),
-          },
-        );
-
-
-      // ========================================================
-      // RESPONSE
-      // ========================================================
-
-      const responseText =
-        await response.text();
-
-
-      console.log(
-        'ADD LT ROOM STATUS:',
-        response.status,
-      );
-
-      console.log(
-        'ADD LT ROOM RESPONSE:',
-        responseText,
-      );
-
+      const responseText = await response.text();
 
       let data = {};
 
-
       try {
-
-        data =
-          responseText
-            ? JSON.parse(responseText)
-            : {};
-
+        data = responseText ? JSON.parse(responseText) : {};
       } catch (error) {
-
-        console.log(
-          'JSON PARSE ERROR:',
-          error,
-        );
-
+        console.log('SAVE LT ROOM JSON ERROR:', error);
         data = {};
       }
 
-
-      // ========================================================
-      // SUCCESS
-      // ========================================================
-
       if (response.ok) {
-
         setAddRoomModalVisible(false);
-
         resetRoomForm();
-
 
         Alert.alert(
           'Success',
-          data.message ||
-            'Venue and schedule added successfully.',
+          data.message || 'Venue and schedule added successfully.',
           [
             {
               text: 'OK',
-
               onPress: async () => {
-
                 await getLTRooms();
               },
             },
@@ -899,569 +460,267 @@ const AdminAddLTRoom = ({navigation}) => {
         return;
       }
 
-
-      // ========================================================
-      // ERROR
-      // ========================================================
-
-      let errorMessage =
+      const errorMessage =
+        data.message ||
+        data.error ||
+        responseText ||
         'Unable to add venue.';
 
-
-      if (data.message) {
-
-        errorMessage =
-          data.message;
-
-      } else if (data.error) {
-
-        errorMessage =
-          data.error;
-
-      } else if (responseText) {
-
-        errorMessage =
-          responseText;
-      }
-
-
-      Alert.alert(
-        'Error',
-        errorMessage,
-      );
-
+      Alert.alert('Error', errorMessage);
     } catch (error) {
-
-      console.log(
-        'ADD LT ROOM ERROR:',
-        error,
-      );
-
+      console.log('ADD LT ROOM ERROR:', error);
 
       Alert.alert(
         'Network Error',
         'Unable to connect with server. Please check your backend and network connection.',
       );
-
     } finally {
-
       setSavingRoom(false);
     }
   };
 
-
   // ============================================================
-  // GET STATUS STYLE
-  // ============================================================
-
-  const getStatusStyle = status => {
-
-    const value =
-      String(status || '')
-        .toLowerCase();
-
-
-    if (value === 'active' ||
-        value === 'available' ||
-        value === 'approved') {
-
-      return {
-
-        backgroundColor: '#EAF8EF',
-
-        color: '#267A48',
-      };
-    }
-
-
-    if (value === 'inactive' ||
-        value === 'blocked' ||
-        value === 'disabled') {
-
-      return {
-
-        backgroundColor: '#FFF0F0',
-
-        color: '#C0392B',
-      };
-    }
-
-
-    return {
-
-      backgroundColor: '#FFF7E8',
-
-      color: '#A66A00',
-    };
-  };
-
-
-  // ============================================================
-  // RENDER SCHEDULE
+  // RENDER ROOM SCHEDULE
   // ============================================================
 
-  const renderRoomSchedule = (
-    schedule,
-    index,
-  ) => {
+  const renderRoomSchedule = (schedule, index) => (
+    <View
+      key={schedule.ltScheduleId || `${schedule.day}-${index}`}
+      style={styles.roomScheduleCard}>
+      <View style={styles.roomScheduleDay}>
+        <MaterialIcons
+          name="calendar-today"
+          size={15}
+          color={colors.primary}
+        />
 
-    return (
+        <Text style={styles.roomScheduleDayText}>
+          {schedule.day || 'N/A'}
+        </Text>
+      </View>
 
-      <View
-        key={
-          schedule.ltScheduleId ||
-          `${schedule.day}-${index}`
-        }
-        style={styles.roomScheduleCard}
-      >
-
-        {/* Day */}
-
-        <View style={styles.roomScheduleDay}>
-
+      <View style={styles.roomScheduleDetails}>
+        <View style={styles.roomScheduleRow}>
           <MaterialIcons
-            name="calendar-today"
-            size={18}
-            color="#173F5F"
+            name="access-time"
+            size={14}
+            color="#666"
           />
 
-          <Text style={styles.roomScheduleDayText}>
-            {schedule.day || 'N/A'}
+          <Text style={styles.roomScheduleTime}>
+            {schedule.time || 'Time not available'}
           </Text>
-
         </View>
 
-
-        {/* Details */}
-
-        <View style={styles.roomScheduleDetails}>
-
+        {(schedule.startDate || schedule.endDate) && (
           <View style={styles.roomScheduleRow}>
-
-            <MaterialIcons
-              name="access-time"
-              size={17}
-              color="#666"
-            />
-
-            <Text style={styles.roomScheduleTime}>
-              {schedule.time || 'Time not available'}
-            </Text>
-
-          </View>
-
-
-          <View style={styles.roomScheduleRow}>
-
             <MaterialIcons
               name="date-range"
-              size={17}
+              size={14}
               color="#777"
             />
 
             <Text style={styles.roomScheduleDate}>
-
-              {schedule.startDate || '-'}
-              {' → '}
-              {schedule.endDate || '-'}
-
+              {schedule.startDate || '-'} → {schedule.endDate || '-'}
             </Text>
-
           </View>
-
-
-          {/* Schedule Status */}
-
-          {schedule.status ? (
-
-            <View style={styles.scheduleStatusRow}>
-
-              <View
-                style={[
-                  styles.smallStatusDot,
-
-                  String(schedule.status)
-                    .toLowerCase() ===
-                    'available'
-                    ? styles.availableDot
-                    : styles.defaultDot,
-                ]}
-              />
-
-              <Text style={styles.scheduleStatusText}>
-                {schedule.status}
-              </Text>
-
-            </View>
-
-          ) : null}
-
-        </View>
-
+        )}
       </View>
-    );
-  };
-
+    </View>
+  );
 
   // ============================================================
   // RENDER ROOM
   // ============================================================
 
-  const renderRoom = (
-    room,
-    index,
-  ) => {
+  const renderRoom = (room, index) => {
+    const roomSchedules = Array.isArray(room.schedules)
+      ? room.schedules
+      : [];
 
-    const roomStatus =
-      getStatusStyle(room.status);
-
-
-    const roomSchedules =
-      Array.isArray(room.schedules)
-        ? room.schedules
-        : [];
-
+    const roomId = room.ltRoomId || index;
+    const isExpanded = !!expandedRoomIds[roomId];
 
     return (
-
       <View
-        key={
-          room.ltRoomId ||
-          `room-${index}`
-        }
-        style={styles.roomCard}
-      >
-
-        {/* ====================================================
-            ROOM HEADER
-        ==================================================== */}
-
-        <View style={styles.roomHeader}>
-
+        key={room.ltRoomId || `room-${index}`}
+        style={styles.roomCard}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => toggleRoomExpand(roomId)}
+          style={styles.roomHeaderTouchable}>
           <View style={styles.roomIcon}>
-
             <MaterialIcons
               name="meeting-room"
-              size={25}
-              color="#173F5F"
+              size={24}
+              color={colors.primary}
             />
-
           </View>
-
 
           <View style={styles.roomTitleContainer}>
-
             <Text style={styles.roomName}>
-              {room.roomName ||
-                'Unnamed Venue'}
+              {room.roomName || 'Unnamed Venue'}
             </Text>
 
-            <Text style={styles.roomId}>
-              Venue ID: {room.ltRoomId || '-'}
-            </Text>
-
-          </View>
-
-
-          {/* STATUS */}
-
-          <View
-            style={[
-              styles.statusBadge,
-              {
-                backgroundColor:
-                  roomStatus.backgroundColor,
-              },
-            ]}
-          >
-
-            <Text
-              style={[
-                styles.statusText,
-                {
-                  color:
-                    roomStatus.color,
-                },
-              ]}
-            >
-              {room.status || 'Unknown'}
-            </Text>
-
-          </View>
-
-        </View>
-
-
-        {/* ====================================================
-            ROOM INFORMATION
-        ==================================================== */}
-
-        <View style={styles.roomInfoContainer}>
-
-          <View style={styles.roomInfoItem}>
-
-            <MaterialIcons
-              name="groups"
-              size={19}
-              color="#173F5F"
-            />
-
-            <View style={styles.roomInfoTextContainer}>
-
-              <Text style={styles.roomInfoLabel}>
-                Capacity
-              </Text>
-
-              <Text style={styles.roomInfoValue}>
+            <Text style={styles.roomCapacityText}>
+              Capacity:{' '}
+              <Text style={styles.roomCapacityVal}>
                 {room.capacity || 0} Students
               </Text>
+            </Text>
+          </View>
 
+          <View style={styles.dropdownIconBox}>
+            <MaterialIcons
+              name={
+                isExpanded
+                  ? 'keyboard-arrow-up'
+                  : 'keyboard-arrow-down'
+              }
+              size={28}
+              color={colors.primary}
+            />
+          </View>
+        </TouchableOpacity>
+
+        {/* EXPANDABLE DROPDOWN CONTENT */}
+        {isExpanded && (
+          <View style={styles.dropdownContent}>
+            <View style={styles.divider} />
+
+            <View style={styles.roomScheduleHeader}>
+              <View>
+                <Text style={styles.roomScheduleTitle}>
+                  Venue Schedule
+                </Text>
+
+                <Text style={styles.roomScheduleSubtitle}>
+                  Available days and timings
+                </Text>
+              </View>
+
+              <View style={styles.scheduleCountBadge}>
+                <Text style={styles.scheduleCountText}>
+                  {roomSchedules.length}
+                </Text>
+              </View>
             </View>
 
-          </View>
+            {roomSchedules.length === 0 ? (
+              <View style={styles.noScheduleBox}>
+                <MaterialIcons
+                  name="event-busy"
+                  size={22}
+                  color="#B0B8C0"
+                />
 
-
-          <View style={styles.roomInfoItem}>
-
-            <MaterialIcons
-              name="event-available"
-              size={19}
-              color="#173F5F"
-            />
-
-            <View style={styles.roomInfoTextContainer}>
-
-              <Text style={styles.roomInfoLabel}>
-                Schedules
-              </Text>
-
-              <Text style={styles.roomInfoValue}>
-                {roomSchedules.length} Available
-              </Text>
-
-            </View>
-
-          </View>
-
-        </View>
-
-
-        {/* ====================================================
-            DIVIDER
-        ==================================================== */}
-
-        <View style={styles.divider} />
-
-
-        {/* ====================================================
-            SCHEDULE HEADER
-        ==================================================== */}
-
-        <View style={styles.roomScheduleHeader}>
-
-          <View>
-
-            <Text style={styles.roomScheduleTitle}>
-              Venue Schedule
-            </Text>
-
-            <Text style={styles.roomScheduleSubtitle}>
-              Available days and timings
-            </Text>
-
-          </View>
-
-
-          <View style={styles.scheduleCountBadge}>
-
-            <Text style={styles.scheduleCountText}>
-              {roomSchedules.length}
-            </Text>
-
-          </View>
-
-        </View>
-
-
-        {/* ====================================================
-            SCHEDULES
-        ==================================================== */}
-
-        {roomSchedules.length === 0 ? (
-
-          <View style={styles.noScheduleBox}>
-
-            <MaterialIcons
-              name="event-busy"
-              size={25}
-              color="#B0B8C0"
-            />
-
-            <Text style={styles.noScheduleText}>
-              No schedule available for this venue.
-            </Text>
-
-          </View>
-
-        ) : (
-
-          <View style={styles.roomSchedulesList}>
-
-            {roomSchedules.map(
-              renderRoomSchedule,
+                <Text style={styles.noScheduleText}>
+                  No schedule available for this venue.
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.roomSchedulesList}>
+                {roomSchedules.map(renderRoomSchedule)}
+              </View>
             )}
-
           </View>
-
         )}
-
       </View>
     );
   };
 
-
   // ============================================================
-  // MAIN RENDER
+  // MAIN RETURN
   // ============================================================
 
   return (
-
     <SafeAreaView style={styles.safeArea}>
-
       <StatusBar
-        barStyle="light-content"
-        backgroundColor="#173F5F"
+        barStyle="dark-content"
+        backgroundColor="#FFFFFF"
       />
 
-
-      {/* ======================================================
+      {/* ========================================================
           HEADER
-      ====================================================== */}
+          Same clean House of Tutor header style
+          ======================================================== */}
 
       <View style={styles.header}>
-
-        {/* BACK */}
-
+        {/* BACK BUTTON */}
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() =>
-            navigation?.goBack()
-          }
-        >
-
+          onPress={() => navigation?.goBack()}
+          activeOpacity={0.7}>
           <MaterialIcons
             name="arrow-back"
-            size={24}
-            color="#FFFFFF"
+            size={21}
+            color="#333333"
           />
-
         </TouchableOpacity>
 
+        {/* LOGO + APP NAME */}
+        <View style={styles.headerCenter}>
+          <Image
+            source={require('../../../assets/images/logo.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
 
-        {/* TITLE */}
-
-        <View style={styles.headerTextContainer}>
-
-          <Text style={styles.headerTitle}>
-            LT Room Management
+          <Text style={styles.logoText}>
+            House of Tutor
           </Text>
-
-          <Text style={styles.headerSubtitle}>
-            Manage learning venues and schedules
-          </Text>
-
         </View>
-
-
-        {/* ==================================================
-            PLUS BUTTON
-        ================================================== */}
-
-        <TouchableOpacity
-          style={styles.addRoomHeaderButton}
-          onPress={openAddRoomModal}
-          activeOpacity={0.8}
-        >
-
-          <MaterialIcons
-            name="add"
-            size={28}
-            color="#173F5F"
-          />
-
-        </TouchableOpacity>
-
       </View>
 
-
-      {/* ======================================================
+      {/* ========================================================
           MAIN ROOM LIST
-      ====================================================== */}
+          ======================================================== */}
 
       {roomsLoading ? (
-
         <View style={styles.loadingContainer}>
-
           <ActivityIndicator
             size="large"
-            color="#173F5F"
+            color={colors.primary}
           />
 
           <Text style={styles.loadingText}>
             Loading LT Rooms...
           </Text>
-
         </View>
-
       ) : (
-
         <ScrollView
           style={styles.flex}
           contentContainerStyle={styles.container}
           showsVerticalScrollIndicator={false}
-
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={['#173F5F']}
-              tintColor="#173F5F"
+              colors={[colors.primary]}
+              tintColor={colors.primary}
             />
-          }
-        >
-
-          {/* ==================================================
-              PAGE INTRO
-          ================================================== */}
-
+          }>
+          {/* PAGE INTRO */}
           <View style={styles.pageIntro}>
-
             <View style={styles.pageIntroIcon}>
-
               <MaterialIcons
                 name="meeting-room"
-                size={26}
-                color="#173F5F"
+                size={24}
+                color={colors.primary}
               />
-
             </View>
 
-
             <View style={styles.pageIntroText}>
-
               <Text style={styles.pageIntroTitle}>
                 Learning Venues
               </Text>
 
               <Text style={styles.pageIntroSubtitle}>
-                Manage all LT rooms and their available schedules.
+                Tap a venue to expand its schedule details.
               </Text>
-
             </View>
 
-
             <View style={styles.totalRoomsBadge}>
-
               <Text style={styles.totalRoomsNumber}>
                 {rooms.length}
               </Text>
@@ -1469,48 +728,34 @@ const AdminAddLTRoom = ({navigation}) => {
               <Text style={styles.totalRoomsLabel}>
                 Rooms
               </Text>
-
             </View>
-
           </View>
 
-
-          {/* ==================================================
-              EMPTY ROOM LIST
-          ================================================== */}
-
+          {/* EMPTY STATE */}
           {rooms.length === 0 ? (
-
             <View style={styles.emptyRooms}>
-
               <View style={styles.emptyRoomsIcon}>
-
                 <MaterialIcons
                   name="meeting-room"
                   size={45}
                   color="#B6C0C9"
                 />
-
               </View>
-
 
               <Text style={styles.emptyRoomsTitle}>
                 No LT Rooms Added
               </Text>
 
-
               <Text style={styles.emptyRoomsText}>
                 No learning venues are currently available.
-                Tap the + button above to add a new venue.
+                Tap the + button at the bottom to add a new
+                venue.
               </Text>
-
 
               <TouchableOpacity
                 style={styles.emptyAddButton}
                 onPress={openAddRoomModal}
-                activeOpacity={0.8}
-              >
-
+                activeOpacity={0.8}>
                 <MaterialIcons
                   name="add"
                   size={21}
@@ -1520,76 +765,59 @@ const AdminAddLTRoom = ({navigation}) => {
                 <Text style={styles.emptyAddButtonText}>
                   Add First Venue
                 </Text>
-
               </TouchableOpacity>
-
             </View>
-
           ) : (
-
-            <View>
-
-              {rooms.map(
-                renderRoom,
-              )}
-
-            </View>
-
+            <View>{rooms.map(renderRoom)}</View>
           )}
 
-
           <View style={styles.bottomSpace} />
-
         </ScrollView>
-
       )}
 
+      {/* ========================================================
+          FLOATING (+) ADD BUTTON
+          ======================================================== */}
 
-      {/* ======================================================
+      <TouchableOpacity
+        style={styles.floatingAddButton}
+        onPress={openAddRoomModal}
+        activeOpacity={0.85}>
+        <MaterialIcons
+          name="add"
+          size={30}
+          color="#FFFFFF"
+        />
+      </TouchableOpacity>
+
+      {/* ========================================================
           ADD VENUE MODAL
-      ====================================================== */}
+          ======================================================== */}
 
       <Modal
         visible={addRoomModalVisible}
         transparent={true}
         animationType="slide"
-        onRequestClose={closeAddRoomModal}
-      >
-
+        onRequestClose={closeAddRoomModal}>
         <View style={styles.addModalOverlay}>
-
           <KeyboardAvoidingView
             style={styles.addModalKeyboard}
             behavior={
-              Platform.OS === 'ios'
-                ? 'padding'
-                : undefined
-            }
-          >
-
+              Platform.OS === 'ios' ? 'padding' : undefined
+            }>
             <View style={styles.addModalContainer}>
-
-              {/* ==============================================
-                  MODAL HEADER
-              ============================================== */}
-
+              {/* MODAL HEADER */}
               <View style={styles.addModalHeader}>
-
                 <View style={styles.addModalTitleContainer}>
-
                   <View style={styles.addModalIcon}>
-
                     <MaterialIcons
                       name="add-business"
                       size={22}
-                      color="#173F5F"
+                      color={colors.primary}
                     />
-
                   </View>
 
-
                   <View>
-
                     <Text style={styles.addModalTitle}>
                       Add New Venue
                     </Text>
@@ -1597,60 +825,40 @@ const AdminAddLTRoom = ({navigation}) => {
                     <Text style={styles.addModalSubtitle}>
                       Add LT / Learning Venue
                     </Text>
-
                   </View>
-
                 </View>
-
 
                 <TouchableOpacity
                   style={styles.modalCloseButton}
                   onPress={closeAddRoomModal}
-                  disabled={savingRoom}
-                >
-
+                  disabled={savingRoom}>
                   <MaterialIcons
                     name="close"
-                    size={23}
+                    size={22}
                     color="#555"
                   />
-
                 </TouchableOpacity>
-
               </View>
 
-
-              {/* ==============================================
-                  ADD VENUE FORM
-              ============================================== */}
-
               <ScrollView
-                showsVerticalScrollIndicator={false}
+                style={{maxHeight: '82%'}}
+                showsVerticalScrollIndicator={true}
                 keyboardShouldPersistTaps="handled"
-              >
-
-                {/* ==========================================
-                    VENUE INFORMATION
-                ========================================== */}
-
+                nestedScrollEnabled={true}>
+                {/* VENUE INFORMATION */}
                 <View style={styles.formSection}>
-
                   <Text style={styles.formSectionTitle}>
                     Venue Information
                   </Text>
-
-
-                  {/* VENUE NAME */}
 
                   <Text style={styles.label}>
                     Venue Name
                   </Text>
 
                   <View style={styles.inputContainer}>
-
                     <MaterialIcons
                       name="meeting-room"
-                      size={21}
+                      size={20}
                       color="#777"
                     />
 
@@ -1661,21 +869,16 @@ const AdminAddLTRoom = ({navigation}) => {
                       value={roomName}
                       onChangeText={setRoomName}
                     />
-
                   </View>
-
-
-                  {/* CAPACITY */}
 
                   <Text style={styles.label}>
                     Capacity
                   </Text>
 
                   <View style={styles.inputContainer}>
-
                     <MaterialIcons
                       name="groups"
-                      size={21}
+                      size={20}
                       color="#777"
                     />
 
@@ -1687,74 +890,50 @@ const AdminAddLTRoom = ({navigation}) => {
                       value={capacity}
                       onChangeText={setCapacity}
                     />
-
                   </View>
-
                 </View>
 
-
-                {/* ==========================================
-                    SCHEDULE
-                ========================================== */}
-
+                {/* AVAILABLE SCHEDULE */}
                 <View style={styles.formSection}>
-
                   <View style={styles.formSectionHeader}>
-
                     <View>
-
                       <Text style={styles.formSectionTitle}>
                         Available Schedule
                       </Text>
 
                       <Text style={styles.formSectionSubtitle}>
-                        Add the days and times when this venue is available.
+                        Select grid slots for venue availability.
                       </Text>
-
                     </View>
 
-
                     <View style={styles.formScheduleCount}>
-
                       <Text style={styles.formScheduleCountText}>
                         {schedules.length}
                       </Text>
-
                     </View>
-
                   </View>
-
-
-                  {/* ADD SCHEDULE */}
 
                   <TouchableOpacity
                     style={styles.addScheduleButton}
                     onPress={openSchedulePopup}
-                    activeOpacity={0.8}
-                  >
-
+                    activeOpacity={0.8}>
                     <MaterialIcons
-                      name="add"
-                      size={23}
+                      name="calendar-view-month"
+                      size={20}
                       color="#FFFFFF"
                     />
 
                     <Text style={styles.addScheduleButtonText}>
-                      Add Schedule
+                      Select Schedule Grid
                     </Text>
-
                   </TouchableOpacity>
 
-
-                  {/* SCHEDULE LIST */}
-
+                  {/* NO SCHEDULE */}
                   {schedules.length === 0 ? (
-
                     <View style={styles.emptySchedule}>
-
                       <MaterialIcons
                         name="event-note"
-                        size={38}
+                        size={36}
                         color="#B8C0C8"
                       />
 
@@ -1763,161 +942,98 @@ const AdminAddLTRoom = ({navigation}) => {
                       </Text>
 
                       <Text style={styles.emptyText}>
-                        Add at least one available day and time.
+                        Tap above to open slot grid and select
+                        timings.
                       </Text>
-
                     </View>
-
                   ) : (
-
                     <View style={styles.scheduleList}>
+                      {schedules.map((item, index) => (
+                        <View
+                          key={`${item.day}-${index}`}
+                          style={styles.scheduleCard}>
+                          <View style={styles.scheduleDayBox}>
+                            <MaterialIcons
+                              name="calendar-today"
+                              size={15}
+                              color={colors.primary}
+                            />
 
-                      {schedules.map(
-                        (item, index) => (
-
-                          <View
-                            key={`${item.day}-${index}`}
-                            style={styles.scheduleCard}
-                          >
-
-                            <View style={styles.scheduleDayBox}>
-
-                              <MaterialIcons
-                                name="calendar-today"
-                                size={21}
-                                color="#173F5F"
-                              />
-
-                              <Text style={styles.scheduleDay}>
-                                {item.day}
-                              </Text>
-
-                            </View>
-
-
-                            <View style={styles.scheduleDetails}>
-
-                              <View style={styles.scheduleRow}>
-
-                                <MaterialIcons
-                                  name="access-time"
-                                  size={18}
-                                  color="#666"
-                                />
-
-                                <Text style={styles.scheduleTime}>
-                                  {item.time}
-                                </Text>
-
-                              </View>
-
-
-                              <View style={styles.scheduleRow}>
-
-                                <MaterialIcons
-                                  name="date-range"
-                                  size={18}
-                                  color="#666"
-                                />
-
-                                <Text style={styles.scheduleDate}>
-                                  {item.startDate} → {item.endDate}
-                                </Text>
-
-                              </View>
-
-                            </View>
-
-
-                            {/* DELETE */}
-
-                            <TouchableOpacity
-                              style={styles.deleteButton}
-                              onPress={() =>
-                                removeSchedule(index)
-                              }
-                            >
-
-                              <MaterialIcons
-                                name="delete-outline"
-                                size={22}
-                                color="#D64545"
-                              />
-
-                            </TouchableOpacity>
-
+                            <Text style={styles.scheduleDay}>
+                              {item.day.substring(0, 3)}
+                            </Text>
                           </View>
 
-                        ),
-                      )}
+                          <View style={styles.scheduleDetails}>
+                            <View style={styles.scheduleRow}>
+                              <MaterialIcons
+                                name="access-time"
+                                size={14}
+                                color="#666"
+                              />
 
+                              <Text style={styles.scheduleTime}>
+                                {item.time}
+                              </Text>
+                            </View>
+                          </View>
+
+                          <TouchableOpacity
+                            style={styles.deleteButton}
+                            onPress={() =>
+                              removeSchedule(index)
+                            }>
+                            <MaterialIcons
+                              name="delete-outline"
+                              size={20}
+                              color="#D64545"
+                            />
+                          </TouchableOpacity>
+                        </View>
+                      ))}
                     </View>
-
                   )}
-
                 </View>
 
-
-                {/* ==========================================
-                    SAVE
-                ========================================== */}
-
+                {/* SAVE VENUE */}
                 <TouchableOpacity
                   style={[
                     styles.saveButton,
-
-                    savingRoom &&
-                      styles.disabledButton,
+                    savingRoom && styles.disabledButton,
                   ]}
                   onPress={saveLTRoom}
                   disabled={savingRoom}
-                  activeOpacity={0.8}
-                >
-
+                  activeOpacity={0.8}>
                   {savingRoom ? (
-
                     <ActivityIndicator
                       size="small"
                       color="#FFFFFF"
                     />
-
                   ) : (
-
                     <MaterialIcons
                       name="save"
-                      size={22}
+                      size={21}
                       color="#FFFFFF"
                     />
-
                   )}
 
                   <Text style={styles.saveButtonText}>
-
                     {savingRoom
                       ? 'Saving Venue...'
                       : 'Save Venue'}
-
                   </Text>
-
                 </TouchableOpacity>
 
-
                 <View style={styles.modalBottomSpace} />
-
               </ScrollView>
-
             </View>
-
           </KeyboardAvoidingView>
-
         </View>
-
       </Modal>
 
-
-      {/* ======================================================
-          SCHEDULE MODAL
-      ====================================================== */}
+      {/* ========================================================
+          SCHEDULE GRID MODAL
+          ======================================================== */}
 
       <Modal
         visible={scheduleModalVisible}
@@ -1925,335 +1041,222 @@ const AdminAddLTRoom = ({navigation}) => {
         animationType="slide"
         onRequestClose={() =>
           setScheduleModalVisible(false)
-        }
-      >
-
+        }>
         <View style={styles.modalOverlay}>
-
-          <View style={styles.modalContainer}>
-
-            {/* ================================================
-                MODAL HEADER
-            ================================================ */}
-
+          <View style={styles.gridModalContainer}>
+            {/* GRID MODAL HEADER */}
             <View style={styles.modalHeader}>
-
               <View>
-
                 <Text style={styles.modalTitle}>
-                  Add Available Schedule
+                  Select Schedule
                 </Text>
 
                 <Text style={styles.modalSubtitle}>
-                  Set venue availability
+                  Tap slots to toggle selection
                 </Text>
-
               </View>
-
 
               <TouchableOpacity
                 style={styles.modalCloseButton}
                 onPress={() =>
                   setScheduleModalVisible(false)
-                }
-              >
-
+                }>
                 <MaterialIcons
                   name="close"
-                  size={23}
+                  size={22}
                   color="#555"
                 />
-
               </TouchableOpacity>
-
             </View>
 
-
+            {/* TIMETABLE GRID */}
             <ScrollView
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-            >
+              showsVerticalScrollIndicator={true}
+              nestedScrollEnabled={true}>
+              <View style={styles.gridCard}>
+                {/* GRID HEADER */}
+                <View style={styles.gridHeaderRow}>
+                  <View style={styles.gridTimeColumnHeader} />
 
-              {/* ============================================
-                  DAY
-              ============================================ */}
-
-              <Text style={styles.modalLabel}>
-                Day
-              </Text>
-
-
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={
-                  styles.daysContainer
-                }
-              >
-
-                {DAYS.map(day => (
-
-                  <TouchableOpacity
-                    key={day}
-                    style={[
-                      styles.dayButton,
-
-                      selectedDay === day &&
-                        styles.selectedDayButton,
-                    ]}
-                    onPress={() =>
-                      setSelectedDay(day)
-                    }
-                  >
-
-                    <Text
-                      style={[
-                        styles.dayButtonText,
-
-                        selectedDay === day &&
-                          styles.selectedDayButtonText,
-                      ]}
-                    >
-                      {day.substring(0, 3)}
-                    </Text>
-
-                  </TouchableOpacity>
-
-                ))}
-
-              </ScrollView>
-
-
-              {/* ============================================
-                  TIME
-              ============================================ */}
-
-              <Text style={styles.modalLabel}>
-                Time
-              </Text>
-
-
-              <View style={styles.inputContainer}>
-
-                <MaterialIcons
-                  name="access-time"
-                  size={21}
-                  color="#777"
-                />
-
-                <TextInput
-                  style={styles.input}
-                  placeholder="e.g. 9:00-10:00 am"
-                  placeholderTextColor="#999"
-                  value={time}
-                  onChangeText={setTime}
-                />
-
-              </View>
-
-
-              <Text style={styles.helperText}>
-                Example: 9:00-10:00 am
-              </Text>
-
-
-              {/* ============================================
-                  START DATE
-              ============================================ */}
-
-              <Text style={styles.modalLabel}>
-                Start Date
-              </Text>
-
-
-              <View style={styles.inputContainer}>
-
-                <MaterialIcons
-                  name="date-range"
-                  size={21}
-                  color="#777"
-                />
-
-                <TextInput
-                  style={styles.input}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor="#999"
-                  value={startDate}
-                  onChangeText={setStartDate}
-                  keyboardType="numbers-and-punctuation"
-                />
-
-              </View>
-
-
-              {/* ============================================
-                  END DATE
-              ============================================ */}
-
-              <Text style={styles.modalLabel}>
-                End Date
-              </Text>
-
-
-              <View style={styles.inputContainer}>
-
-                <MaterialIcons
-                  name="date-range"
-                  size={21}
-                  color="#777"
-                />
-
-                <TextInput
-                  style={styles.input}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor="#999"
-                  value={endDate}
-                  onChangeText={setEndDate}
-                  keyboardType="numbers-and-punctuation"
-                />
-
-              </View>
-
-
-              {/* ============================================
-                  STATUS
-              ============================================ */}
-
-              <View style={styles.availableBox}>
-
-                <MaterialIcons
-                  name="check-circle"
-                  size={21}
-                  color="#2E8B57"
-                />
-
-                <View style={styles.availableTextContainer}>
-
-                  <Text style={styles.availableTitle}>
-                    Available
-                  </Text>
-
-                  <Text style={styles.availableDescription}>
-                    This schedule will be saved as available.
-                  </Text>
-
+                  {DAYS_SHORT.map(day => (
+                    <View
+                      key={day}
+                      style={styles.gridHeaderCell}>
+                      <Text style={styles.gridHeaderCellText}>
+                        {day}
+                      </Text>
+                    </View>
+                  ))}
                 </View>
 
+                {/* GRID ROWS */}
+                {TIME_SLOTS.map((slot, slotIdx) => (
+                  <View
+                    key={slot}
+                    style={styles.gridRow}>
+                    <View style={styles.gridTimeCell}>
+                      <Text
+                        style={styles.gridTimeText}
+                        numberOfLines={1}>
+                        {slot}
+                      </Text>
+                    </View>
+
+                    {DAYS_SHORT.map((_, dayIdx) => {
+                      const key = `${dayIdx}-${slotIdx}`;
+                      const isSelected =
+                        !!selectedSlots[key];
+
+                      return (
+                        <TouchableOpacity
+                          key={key}
+                          activeOpacity={0.7}
+                          style={[
+                            styles.gridSlotCell,
+                            isSelected &&
+                              styles.gridSlotCellSelected,
+                          ]}
+                          onPress={() =>
+                            toggleSlot(dayIdx, slotIdx)
+                          }>
+                          {isSelected && (
+                            <MaterialIcons
+                              name="check"
+                              size={13}
+                              color="#FFFFFF"
+                            />
+                          )}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                ))}
               </View>
 
+              {/* GRID ACTION BUTTONS */}
+              <View style={styles.gridActionRow}>
+                <TouchableOpacity
+                  style={styles.saveScheduleBtn}
+                  onPress={confirmGridSchedule}
+                  activeOpacity={0.8}>
+                  <MaterialIcons
+                    name="check-circle"
+                    size={19}
+                    color="#FFFFFF"
+                  />
 
-              {/* ============================================
-                  ADD BUTTON
-              ============================================ */}
+                  <Text style={styles.saveScheduleBtnText}>
+                    Save Schedule
+                  </Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.modalAddButton}
-                onPress={addSchedule}
-                activeOpacity={0.8}
-              >
-
-                <MaterialIcons
-                  name="add"
-                  size={22}
-                  color="#FFFFFF"
-                />
-
-                <Text style={styles.modalAddButtonText}>
-                  Add Schedule
-                </Text>
-
-              </TouchableOpacity>
-
+                <TouchableOpacity
+                  style={styles.clearAllBtn}
+                  onPress={clearAllSlots}
+                  activeOpacity={0.8}>
+                  <Text style={styles.clearAllBtnText}>
+                    Clear All
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
               <View style={styles.modalBottomSpace} />
-
             </ScrollView>
-
           </View>
-
         </View>
-
       </Modal>
-
     </SafeAreaView>
   );
 };
-
 
 // ============================================================
 // STYLES
 // ============================================================
 
 const styles = StyleSheet.create({
+  // ============================================================
+  // SAFE AREA
+  // ============================================================
 
   safeArea: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
+    backgroundColor: colors.background,
   },
 
   flex: {
     flex: 1,
   },
 
-
-  // ==========================================================
+  // ============================================================
   // HEADER
-  // ==========================================================
+  // Same common House of Tutor header structure
+  // ============================================================
 
   header: {
-    backgroundColor: '#173F5F',
-    minHeight: 72,
+    height: 58,
+    backgroundColor: '#FFFFFF',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EAEAEA',
   },
 
   backButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#F2F4F7',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 7,
+    marginRight: 12,
   },
 
-  headerTextContainer: {
+  headerCenter: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
   },
 
-  headerTitle: {
-    color: '#FFFFFF',
-    fontSize: 19,
+  logoImage: {
+    width: 34,
+    height: 34,
+    marginRight: 9,
+  },
+
+  logoText: {
+    color: colors.primary,
+    fontSize: 18,
     fontWeight: '700',
   },
 
-  headerSubtitle: {
-    color: '#D9E5EE',
-    fontSize: 11,
-    marginTop: 2,
-  },
+  // ============================================================
+  // FLOATING ACTION BUTTON
+  // ============================================================
 
-  addRoomHeaderButton: {
-    width: 43,
-    height: 43,
-    borderRadius: 22,
-    backgroundColor: '#FFFFFF',
+  floatingAddButton: {
+    position: 'absolute',
+    bottom: 24,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 4,
+    elevation: 6,
+    shadowColor: colors.primary,
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 3,
     },
   },
 
-
-  // ==========================================================
+  // ============================================================
   // LOADING
-  // ==========================================================
+  // ============================================================
 
   loadingContainer: {
     flex: 1,
@@ -2262,39 +1265,35 @@ const styles = StyleSheet.create({
   },
 
   loadingText: {
-    color: '#666',
+    color: colors.text,
     fontSize: 13,
     marginTop: 10,
   },
 
-
-  // ==========================================================
+  // ============================================================
   // MAIN CONTAINER
-  // ==========================================================
+  // ============================================================
 
   container: {
     padding: 15,
-    paddingBottom: 30,
+    paddingBottom: 80,
   },
 
-
-  // ==========================================================
+  // ============================================================
   // PAGE INTRO
-  // ==========================================================
+  // ============================================================
 
   pageIntro: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: 12,
     padding: 14,
-    marginBottom: 15,
+    marginBottom: 14,
     flexDirection: 'row',
     alignItems: 'center',
-
-    elevation: 2,
-
+    elevation: 1.5,
     shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -2302,13 +1301,13 @@ const styles = StyleSheet.create({
   },
 
   pageIntroIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#E8F0F6',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#E8F4F2',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 11,
+    marginRight: 12,
   },
 
   pageIntroText: {
@@ -2316,75 +1315,70 @@ const styles = StyleSheet.create({
   },
 
   pageIntroTitle: {
-    color: '#173F5F',
-    fontSize: 16,
+    color: colors.text,
+    fontSize: 15,
     fontWeight: '700',
   },
 
   pageIntroSubtitle: {
     color: '#777',
     fontSize: 11,
-    marginTop: 3,
-    lineHeight: 16,
+    marginTop: 2,
   },
 
   totalRoomsBadge: {
-    minWidth: 48,
-    backgroundColor: '#F0F5F9',
-    borderRadius: 9,
-    paddingVertical: 6,
-    paddingHorizontal: 7,
+    minWidth: 44,
+    backgroundColor: '#F0F7F6',
+    borderRadius: 8,
+    paddingVertical: 5,
+    paddingHorizontal: 6,
     alignItems: 'center',
     justifyContent: 'center',
   },
 
   totalRoomsNumber: {
-    color: '#173F5F',
-    fontSize: 16,
+    color: colors.primary,
+    fontSize: 15,
     fontWeight: '800',
   },
 
   totalRoomsLabel: {
     color: '#777',
     fontSize: 9,
-    marginTop: 1,
   },
 
-
-  // ==========================================================
+  // ============================================================
   // ROOM CARD
-  // ==========================================================
+  // ============================================================
 
   roomCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 15,
-    marginBottom: 14,
-
-    elevation: 2,
-
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+    elevation: 1.5,
     shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
     shadowOffset: {
       width: 0,
       height: 2,
     },
   },
 
-  roomHeader: {
+  roomHeaderTouchable: {
     flexDirection: 'row',
     alignItems: 'center',
   },
 
   roomIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#E8F0F6',
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#E8F4F2',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 11,
+    marginRight: 12,
   },
 
   roomTitleContainer: {
@@ -2392,81 +1386,42 @@ const styles = StyleSheet.create({
   },
 
   roomName: {
-    color: '#173F5F',
-    fontSize: 16,
+    color: colors.text,
+    fontSize: 15,
     fontWeight: '700',
   },
 
-  roomId: {
-    color: '#999',
-    fontSize: 10,
-    marginTop: 3,
-  },
-
-  statusBadge: {
-    borderRadius: 15,
-    paddingVertical: 5,
-    paddingHorizontal: 9,
-    marginLeft: 5,
-  },
-
-  statusText: {
-    fontSize: 10,
-    fontWeight: '700',
-  },
-
-
-  // ==========================================================
-  // ROOM INFORMATION
-  // ==========================================================
-
-  roomInfoContainer: {
-    flexDirection: 'row',
-    marginTop: 15,
-    gap: 9,
-  },
-
-  roomInfoItem: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 9,
-    padding: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-
-  roomInfoTextContainer: {
-    marginLeft: 8,
-    flex: 1,
-  },
-
-  roomInfoLabel: {
-    color: '#888',
-    fontSize: 10,
-  },
-
-  roomInfoValue: {
-    color: '#333',
+  roomCapacityText: {
+    color: '#777',
     fontSize: 12,
-    fontWeight: '700',
     marginTop: 2,
   },
 
+  roomCapacityVal: {
+    color: colors.text,
+    fontWeight: '700',
+  },
 
-  // ==========================================================
-  // DIVIDER
-  // ==========================================================
+  dropdownIconBox: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  dropdownContent: {
+    marginTop: 4,
+  },
 
   divider: {
     height: 1,
-    backgroundColor: '#E8ECF0',
-    marginVertical: 14,
+    backgroundColor: '#EEEEEE',
+    marginVertical: 12,
   },
 
-
-  // ==========================================================
-  // ROOM SCHEDULE HEADER
-  // ==========================================================
+  // ============================================================
+  // ROOM SCHEDULE
+  // ============================================================
 
   roomScheduleHeader: {
     flexDirection: 'row',
@@ -2476,127 +1431,95 @@ const styles = StyleSheet.create({
   },
 
   roomScheduleTitle: {
-    color: '#173F5F',
-    fontSize: 14,
+    color: colors.text,
+    fontSize: 13,
     fontWeight: '700',
   },
 
   roomScheduleSubtitle: {
     color: '#888',
     fontSize: 10,
-    marginTop: 2,
+    marginTop: 1,
   },
 
   scheduleCountBadge: {
-    minWidth: 27,
-    height: 27,
-    borderRadius: 14,
-    backgroundColor: '#E8F0F6',
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#E8F4F2',
     alignItems: 'center',
     justifyContent: 'center',
   },
 
   scheduleCountText: {
-    color: '#173F5F',
+    color: colors.primary,
     fontSize: 11,
     fontWeight: '800',
   },
 
-
-  // ==========================================================
-  // ROOM SCHEDULE
-  // ==========================================================
-
   roomSchedulesList: {
-    gap: 8,
+    gap: 7,
   },
 
   roomScheduleCard: {
-    backgroundColor: '#FAFBFC',
+    backgroundColor: '#FAFAFA',
     borderWidth: 1,
-    borderColor: '#E2E7EC',
-    borderRadius: 9,
-    padding: 10,
+    borderColor: '#E8E8E8',
+    borderRadius: 8,
+    padding: 9,
     flexDirection: 'row',
     alignItems: 'center',
   },
 
   roomScheduleDay: {
-    width: 73,
+    width: 66,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingRight: 8,
+    paddingRight: 6,
   },
 
   roomScheduleDayText: {
-    color: '#173F5F',
+    color: colors.primary,
     fontSize: 11,
     fontWeight: '700',
-    marginTop: 4,
+    marginTop: 2,
     textAlign: 'center',
   },
 
   roomScheduleDetails: {
     flex: 1,
     borderLeftWidth: 1,
-    borderLeftColor: '#E2E7EC',
-    paddingLeft: 10,
+    borderLeftColor: '#E8E8E8',
+    paddingLeft: 9,
   },
 
   roomScheduleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 2,
+    marginVertical: 1,
   },
 
   roomScheduleTime: {
-    color: '#333',
-    fontSize: 12,
+    color: colors.text,
+    fontSize: 11,
     fontWeight: '600',
-    marginLeft: 6,
+    marginLeft: 5,
   },
 
   roomScheduleDate: {
     color: '#777',
-    fontSize: 10,
-    marginLeft: 6,
-  },
-
-  scheduleStatusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-
-  smallStatusDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    marginRight: 5,
-  },
-
-  availableDot: {
-    backgroundColor: '#2E8B57',
-  },
-
-  defaultDot: {
-    backgroundColor: '#A0A8B0',
-  },
-
-  scheduleStatusText: {
-    color: '#777',
     fontSize: 9,
+    marginLeft: 5,
   },
 
-
-  // ==========================================================
+  // ============================================================
   // NO SCHEDULE
-  // ==========================================================
+  // ============================================================
 
   noScheduleBox: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 9,
-    paddingVertical: 18,
+    backgroundColor: '#FAFAFA',
+    borderRadius: 8,
+    paddingVertical: 14,
     paddingHorizontal: 10,
     alignItems: 'center',
     justifyContent: 'center',
@@ -2605,28 +1528,25 @@ const styles = StyleSheet.create({
   noScheduleText: {
     color: '#888',
     fontSize: 11,
-    marginTop: 6,
+    marginTop: 4,
     textAlign: 'center',
   },
 
-
-  // ==========================================================
+  // ============================================================
   // EMPTY ROOMS
-  // ==========================================================
+  // ============================================================
 
   emptyRooms: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: 12,
     paddingVertical: 35,
     paddingHorizontal: 25,
     alignItems: 'center',
     justifyContent: 'center',
-
-    elevation: 2,
-
+    elevation: 1.5,
     shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -2634,16 +1554,16 @@ const styles = StyleSheet.create({
   },
 
   emptyRoomsIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#F1F4F7',
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: '#F4F4F4',
     alignItems: 'center',
     justifyContent: 'center',
   },
 
   emptyRoomsTitle: {
-    color: '#173F5F',
+    color: colors.text,
     fontSize: 16,
     fontWeight: '700',
     marginTop: 15,
@@ -2658,12 +1578,11 @@ const styles = StyleSheet.create({
   },
 
   emptyAddButton: {
-    backgroundColor: '#173F5F',
-    minHeight: 45,
-    borderRadius: 9,
+    backgroundColor: colors.primary,
+    minHeight: 44,
+    borderRadius: 8,
     paddingHorizontal: 18,
-    marginTop: 17,
-
+    marginTop: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -2676,10 +1595,9 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
 
-
-  // ==========================================================
-  // ADD ROOM MODAL
-  // ==========================================================
+  // ============================================================
+  // ADD MODAL
+  // ============================================================
 
   addModalOverlay: {
     flex: 1,
@@ -2688,13 +1606,13 @@ const styles = StyleSheet.create({
   },
 
   addModalKeyboard: {
-    maxHeight: '94%',
+    maxHeight: '90%',
   },
 
   addModalContainer: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     paddingHorizontal: 18,
     paddingTop: 18,
   },
@@ -2703,7 +1621,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 17,
+    marginBottom: 15,
   },
 
   addModalTitleContainer: {
@@ -2713,31 +1631,43 @@ const styles = StyleSheet.create({
   },
 
   addModalIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: '#E8F0F6',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#E8F4F2',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
   },
 
   addModalTitle: {
-    color: '#173F5F',
-    fontSize: 18,
+    color: colors.text,
+    fontSize: 16,
     fontWeight: '700',
   },
 
   addModalSubtitle: {
     color: '#777',
     fontSize: 11,
-    marginTop: 2,
+    marginTop: 1,
   },
 
+  // ============================================================
+  // COMMON MODAL CLOSE BUTTON
+  // ============================================================
 
-  // ==========================================================
+  modalCloseButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#F0F0F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // ============================================================
   // FORM SECTION
-  // ==========================================================
+  // ============================================================
 
   formSection: {
     backgroundColor: '#FFFFFF',
@@ -2748,209 +1678,187 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 14,
+    marginBottom: 12,
   },
 
   formSectionTitle: {
-    color: '#173F5F',
-    fontSize: 15,
+    color: colors.text,
+    fontSize: 14,
     fontWeight: '700',
   },
 
   formSectionSubtitle: {
     color: '#888',
     fontSize: 10,
-    marginTop: 3,
-    lineHeight: 15,
+    marginTop: 2,
+    lineHeight: 14,
   },
 
   formScheduleCount: {
-    width: 29,
-    height: 29,
-    borderRadius: 15,
-    backgroundColor: '#E8F0F6',
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#E8F4F2',
     alignItems: 'center',
     justifyContent: 'center',
   },
 
   formScheduleCountText: {
-    color: '#173F5F',
+    color: colors.primary,
     fontSize: 11,
     fontWeight: '800',
   },
 
-
-  // ==========================================================
-  // INPUT
-  // ==========================================================
+  // ============================================================
+  // INPUTS
+  // ============================================================
 
   label: {
-    color: '#333',
-    fontSize: 13,
+    color: colors.text,
+    fontSize: 12,
     fontWeight: '600',
-    marginBottom: 7,
+    marginBottom: 6,
     marginTop: 4,
   },
 
   inputContainer: {
-    minHeight: 48,
+    minHeight: 45,
     borderWidth: 1,
-    borderColor: '#D9DEE4',
-    borderRadius: 9,
-    backgroundColor: '#FAFBFC',
-
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    backgroundColor: '#FAFAFA',
     flexDirection: 'row',
     alignItems: 'center',
-
-    paddingHorizontal: 13,
-
-    marginBottom: 13,
+    paddingHorizontal: 12,
+    marginBottom: 12,
   },
 
   input: {
     flex: 1,
-    color: '#222',
-    fontSize: 14,
-    paddingVertical: 10,
-    marginLeft: 9,
+    color: colors.text,
+    fontSize: 13,
+    paddingVertical: 8,
+    marginLeft: 8,
   },
 
-
-  // ==========================================================
-  // ADD SCHEDULE
-  // ==========================================================
+  // ============================================================
+  // ADD SCHEDULE BUTTON
+  // ============================================================
 
   addScheduleButton: {
-    backgroundColor: '#173F5F',
-    minHeight: 48,
-    borderRadius: 9,
-
+    backgroundColor: colors.primary,
+    minHeight: 45,
+    borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-
-    marginBottom: 13,
+    marginBottom: 12,
   },
 
   addScheduleButtonText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
-    marginLeft: 7,
+    marginLeft: 6,
   },
 
-
-  // ==========================================================
+  // ============================================================
   // EMPTY SCHEDULE
-  // ==========================================================
+  // ============================================================
 
   emptySchedule: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F8FAFC',
-    borderRadius: 10,
-    paddingVertical: 22,
-    paddingHorizontal: 15,
+    backgroundColor: '#FAFAFA',
+    borderRadius: 8,
+    paddingVertical: 18,
+    paddingHorizontal: 12,
   },
 
   emptyTitle: {
     color: '#555',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
-    marginTop: 8,
+    marginTop: 6,
   },
 
   emptyText: {
     color: '#888',
-    fontSize: 11,
-    marginTop: 4,
+    fontSize: 10,
+    marginTop: 2,
     textAlign: 'center',
   },
 
-
-  // ==========================================================
-  // SCHEDULE CARD
-  // ==========================================================
+  // ============================================================
+  // SCHEDULE LIST
+  // ============================================================
 
   scheduleList: {
-    gap: 9,
+    gap: 8,
   },
 
   scheduleCard: {
     borderWidth: 1,
-    borderColor: '#E1E6EB',
-    backgroundColor: '#FAFBFC',
-    borderRadius: 10,
-
-    padding: 11,
-
+    borderColor: '#E8E8E8',
+    backgroundColor: '#FAFAFA',
+    borderRadius: 8,
+    padding: 10,
     flexDirection: 'row',
     alignItems: 'center',
   },
 
   scheduleDayBox: {
-    width: 65,
+    width: 54,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 3,
   },
 
   scheduleDay: {
-    color: '#173F5F',
+    color: colors.primary,
     fontSize: 11,
     fontWeight: '700',
-    marginTop: 5,
-    textAlign: 'center',
   },
 
   scheduleDetails: {
     flex: 1,
-    marginLeft: 7,
+    marginLeft: 6,
   },
 
   scheduleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 2,
   },
 
   scheduleTime: {
-    color: '#333',
-    fontSize: 12,
+    color: colors.text,
+    fontSize: 11,
     fontWeight: '600',
-    marginLeft: 6,
-  },
-
-  scheduleDate: {
-    color: '#666',
-    fontSize: 10,
-    marginLeft: 6,
-  },
-
-  deleteButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#FFF1F1',
-    alignItems: 'center',
-    justifyContent: 'center',
     marginLeft: 5,
   },
 
+  deleteButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FFF0F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 4,
+  },
 
-  // ==========================================================
+  // ============================================================
   // SAVE BUTTON
-  // ==========================================================
+  // ============================================================
 
   saveButton: {
-    backgroundColor: '#173F5F',
-    minHeight: 52,
-    borderRadius: 10,
-
+    backgroundColor: colors.primary,
+    minHeight: 46,
+    borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-
-    marginTop: 3,
+    marginTop: 8,
   },
 
   disabledButton: {
@@ -2959,15 +1867,14 @@ const styles = StyleSheet.create({
 
   saveButtonText: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
-    marginLeft: 8,
+    marginLeft: 6,
   },
 
-
-  // ==========================================================
-  // MODAL
-  // ==========================================================
+  // ============================================================
+  // GRID MODAL
+  // ============================================================
 
   modalOverlay: {
     flex: 1,
@@ -2975,192 +1882,162 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
 
-  modalContainer: {
+  gridModalContainer: {
     backgroundColor: '#FFFFFF',
-
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
-
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     maxHeight: '90%',
-
-    paddingHorizontal: 18,
-    paddingTop: 18,
+    paddingHorizontal: 12,
+    paddingTop: 16,
   },
 
   modalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-
-    marginBottom: 17,
+    marginBottom: 12,
+    paddingHorizontal: 4,
   },
 
   modalTitle: {
-    color: '#173F5F',
-    fontSize: 18,
+    color: colors.text,
+    fontSize: 16,
     fontWeight: '700',
   },
 
   modalSubtitle: {
     color: '#777',
-    fontSize: 12,
-    marginTop: 3,
+    fontSize: 11,
+    marginTop: 1,
   },
 
-  modalCloseButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#F1F3F5',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  // ============================================================
+  // GRID TABLE
+  // ============================================================
 
-
-  // ==========================================================
-  // MODAL LABEL
-  // ==========================================================
-
-  modalLabel: {
-    color: '#333',
-    fontSize: 13,
-    fontWeight: '700',
-    marginBottom: 8,
-    marginTop: 5,
-  },
-
-
-  // ==========================================================
-  // DAYS
-  // ==========================================================
-
-  daysContainer: {
-    paddingBottom: 7,
-  },
-
-  dayButton: {
-    minWidth: 50,
-    height: 42,
-
-    borderRadius: 9,
-
-    borderWidth: 1,
-    borderColor: '#D7DDE3',
-
+  gridCard: {
     backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    marginBottom: 14,
+  },
 
+  gridHeaderRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    paddingBottom: 6,
+    marginBottom: 4,
+  },
+
+  gridTimeColumnHeader: {
+    flex: 1.8,
+  },
+
+  gridHeaderCell: {
+    flex: 1,
+    alignItems: 'center',
+  },
+
+  gridHeaderCellText: {
+    color: colors.text,
+    fontSize: 10,
+    fontWeight: '700',
+  },
+
+  gridRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 2,
+  },
+
+  gridTimeCell: {
+    flex: 1.8,
     justifyContent: 'center',
-
-    marginRight: 7,
+    paddingLeft: 2,
   },
 
-  selectedDayButton: {
-    backgroundColor: '#173F5F',
-    borderColor: '#173F5F',
-  },
-
-  dayButtonText: {
-    color: '#555',
-    fontSize: 12,
+  gridTimeText: {
+    color: '#666',
+    fontSize: 8.5,
     fontWeight: '600',
   },
 
-  selectedDayButtonText: {
-    color: '#FFFFFF',
+  gridSlotCell: {
+    flex: 1,
+    height: 32,
+    marginHorizontal: 1,
+    borderRadius: 5,
+    backgroundColor: '#F2F4F7',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
+  gridSlotCellSelected: {
+    backgroundColor: colors.primary,
+  },
 
-  // ==========================================================
-  // HELPER
-  // ==========================================================
+  // ============================================================
+  // GRID ACTION BUTTONS
+  // ============================================================
 
-  helperText: {
-    color: '#888',
-    fontSize: 11,
-    marginTop: -7,
+  gridActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
     marginBottom: 10,
   },
 
-
-  // ==========================================================
-  // AVAILABLE BOX
-  // ==========================================================
-
-  availableBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-
-    backgroundColor: '#EFFAF3',
-
-    borderWidth: 1,
-    borderColor: '#CBEBD5',
-
-    borderRadius: 9,
-
-    padding: 12,
-
-    marginTop: 3,
-    marginBottom: 15,
-  },
-
-  availableTextContainer: {
-    marginLeft: 9,
-    flex: 1,
-  },
-
-  availableTitle: {
-    color: '#267A48',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-
-  availableDescription: {
-    color: '#5C8068',
-    fontSize: 11,
-    marginTop: 2,
-  },
-
-
-  // ==========================================================
-  // MODAL ADD BUTTON
-  // ==========================================================
-
-  modalAddButton: {
-    height: 49,
-    borderRadius: 9,
-
-    backgroundColor: '#173F5F',
-
+  saveScheduleBtn: {
+    flex: 1.6,
+    backgroundColor: colors.primary,
+    height: 45,
+    borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
 
-  modalAddButtonText: {
+  saveScheduleBtnText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
-    marginLeft: 7,
+    marginLeft: 5,
   },
+
+  clearAllBtn: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#D0D0D0',
+    backgroundColor: '#FFFFFF',
+    height: 45,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  clearAllBtnText: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
+  // ============================================================
+  // SPACING
+  // ============================================================
 
   modalBottomSpace: {
     height: 25,
   },
-
-
-  // ==========================================================
-  // BOTTOM
-  // ==========================================================
 
   bottomSpace: {
     height: 20,
   },
 });
 
-
-export default AdminAddLTRoom;
-
+export default AdminVenueManagement;
 
 
 
