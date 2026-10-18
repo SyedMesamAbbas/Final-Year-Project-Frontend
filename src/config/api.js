@@ -10,7 +10,7 @@
 // export const BASE_URL =       "http://192.168.18.67:5000/api";
 
 //For Sherazi 
-export const BASE_URL =       "http://192.168.137.1:5000/api";
+export const BASE_URL =       "http://192.168.18.68:5000/api";
 
 //for Bhena Hotspot
 // export const BASE_URL =    "http://10.56.100.19:5000/api";
