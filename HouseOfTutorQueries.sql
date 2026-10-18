@@ -408,6 +408,8 @@ Select * from LT_Room
 Select * from LT_Room_Schedule
 Select * from Student_Friend
 
+
+update Request set Status='Accepted' where request_id=4048
 update Student_Friend set status='Pending' where friendship_id=1
 Update Payment set tutor_status='Pending' where fee_id=5
 Update Payment set tutor_status='Received' where fee_id=5
@@ -426,12 +428,24 @@ update Request set Status='Accepted' where request_id=3042
 update Tutor set teaching_mode='Visiting' where user_id=6
 update Tutor set teaching_mode='Visiting' where user_id=2
 update Tutor set status='Approved' where user_id=2
+update Tutor set radius=3 where tutor_id=1011
+update student set Latitude='33.6844' where student_id=1030
+update student set Longitude='73.0479' where student_id=1030
 
-Delete Student_Course where course_id=2
+delete Request where request_id=4048
 
 
 
 
+Select * from Request
+Select * from Schedule
+Select * from Student_Schedule
+Update Request set Time='2:00-3:00 pm' where request_id=3048
+Update Request set Time='2:00-3:00 pm' where request_id=3049
+Update Request set Time='11:00-12:00 pm' where request_id=4048
+
+Update Request set Time='12:00-1:00 pm' where request_id in (3036,3039,3040,3041)
+Update Request set Time='10:00-11:00 am' where request_id in (3037,3038)
 
 
 
