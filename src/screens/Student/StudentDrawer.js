@@ -50,12 +50,11 @@ const MENU_ITEMS = [
     route: "StudentFriendList",
     description: "Connect and interact with peers",
   },
-
-    {
-    label: "Group",
-    icon: "people-outline",
+  {
+    label: "Student Group",
+    icon: "groups", // Valid MaterialIcons names: "groups", "group", "school", "people"
     route: "StudentGroup",
-    description: "Connect and interact with peers",
+    description: "Find your tribe: Join study circles, share ideas, and grow together",
   },
 ];
 
