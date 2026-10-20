@@ -15,6 +15,8 @@ import StudentFee from "../screens/Student/StudentFee";
 import StudentFindTutorNonVisting from "../screens/Student/StudentFindTutorNonVisiting"
 import StudentAddFiend from "../screens/Student/StudentAddFriend"
 import StudentFriendList from "../screens/Student/StudentFriendList"
+import StudentGroup from '../screens/Student/StudentGroup';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -36,6 +38,7 @@ const StudentDrawerNavigator = () => {
       <Stack.Screen name="MyTutor" component={MyTutor} />
       <Stack.Screen name="StudentAddFiend" component={StudentAddFiend} />
       <Stack.Screen name="StudentFriendList" component={StudentFriendList} />
+      <Stack.Screen name="StudentGroup" component={StudentGroup}/>
     </Stack.Navigator>
   );
 };

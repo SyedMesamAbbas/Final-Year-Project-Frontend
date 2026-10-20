@@ -50,6 +50,13 @@ const MENU_ITEMS = [
     route: "StudentFriendList",
     description: "Connect and interact with peers",
   },
+
+    {
+    label: "Group",
+    icon: "people-outline",
+    route: "StudentGroup",
+    description: "Connect and interact with peers",
+  },
 ];
 
 const StudentDrawer = ({ navigation }) => {
