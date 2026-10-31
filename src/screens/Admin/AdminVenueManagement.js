@@ -884,7 +884,7 @@ const AdminVenueManagement = ({navigation}) => {
 
                     <TextInput
                       style={styles.input}
-                      placeholder="e.g. 30"
+                      placeholder="e.g. 10"
                       placeholderTextColor="#999"
                       keyboardType="numeric"
                       value={capacity}
