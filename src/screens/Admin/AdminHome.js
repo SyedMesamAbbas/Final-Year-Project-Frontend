@@ -51,7 +51,7 @@ const AdminHome = ({ navigation }) => {
       title: "All Classes",
       value: "0",
       icon: require("../../../assets/images/classes.png"),
-      route: "AdminDrawer",
+      route: "AdminClasses",
       accent: "#8B5CF6",
       bgAccent: "#F5F3FF",
     },

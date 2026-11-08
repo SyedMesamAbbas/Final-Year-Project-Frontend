@@ -20,13 +20,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ReactNativeBlobUtil from "react-native-blob-util";
 
-import {
-  pick,
-  types,
-  keepLocalCopy,
-  isErrorWithCode,
-  errorCodes,
-} from "@react-native-documents/picker";
+import {pick,types,keepLocalCopy,isErrorWithCode,errorCodes,} from "@react-native-documents/picker";
 
 import colors from "../utils/colors";
 import { BASE_URL } from "../../config/api";
