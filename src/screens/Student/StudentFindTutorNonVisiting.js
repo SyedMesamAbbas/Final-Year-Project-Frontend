@@ -77,6 +77,14 @@ const StudentFindTutorNonVisiting = ({ navigation, route }) => {
   const [learningMode, setLearningMode] = useState("FullTime");
   const [learningDuration, setLearningDuration] = useState("");
   const [learningDurationUnit, setLearningDurationUnit] = useState("Weeks");
+
+  // =====================================
+  // ACCELERATED COURSE PLAN
+  // =====================================
+  const [planType, setPlanType] = useState("Normal");
+  const [requestedDurationWeeks, setRequestedDurationWeeks] = useState("");
+  const [requestedClassesPerWeek, setRequestedClassesPerWeek] = useState("");
+  const [planStartDate, setPlanStartDate] = useState("");
   const [requestLoading, setRequestLoading] = useState(false);
 
   // Prevents an older response from overwriting a newer one
@@ -180,10 +188,7 @@ const StudentFindTutorNonVisiting = ({ navigation, route }) => {
         data?.message || "Unable to load available tutors right now."
       );
 
-      Alert.alert(
-        "Error",
-        data?.message || "Unable to load available tutors."
-      );
+      Alert.alert("Error", data?.message || "Unable to load available tutors.");
     } catch (error) {
       console.log("FETCH NON-VISITING TUTORS ERROR:", error);
 
@@ -230,6 +235,13 @@ const StudentFindTutorNonVisiting = ({ navigation, route }) => {
         String(t?.time || "").trim() === String(item?.time || "").trim()
     );
 
+  const clearSelectedTutors = () => {
+    if (requestLoading) return;
+    setSelectedTutors([]);
+    setSelectedRequestDay("");
+    setSelectedRequestTime("");
+  };
+
   const toggleTutorSelection = (item) => {
     const tutorId = Number(item?.tutor_id);
 
@@ -249,6 +261,8 @@ const StudentFindTutorNonVisiting = ({ navigation, route }) => {
       if (updatedTutors.length === 0) {
         setSelectedRequestDay("");
         setSelectedRequestTime("");
+        // Close the request modal if the last tutor was removed from it
+        setRequestModal(false);
       }
       return;
     }
@@ -335,25 +349,29 @@ const StudentFindTutorNonVisiting = ({ navigation, route }) => {
   // MODAL HELPERS
   // ======================================================
 
+  const resetAcceleratedPlanFields = () => {
+    setPlanType("Normal");
+    setRequestedDurationWeeks("");
+    setRequestedClassesPerWeek("");
+    setPlanStartDate("");
+  };
+
   const resetLearningFields = () => {
     setLearningMode("FullTime");
     setLearningDuration("");
     setLearningDurationUnit("Weeks");
+
+    resetAcceleratedPlanFields();
   };
 
   const openRequestModal = () => {
     if (selectedTutors.length === 0) {
-      Alert.alert("Select Tutor", "Please select at least one tutor first.");
+      Alert.alert("Select Tutor", "Please select at least one tutor.");
       return;
     }
 
-    if (!selectedRequestDay) {
-      Alert.alert("Missing Day", "Selected tutor day is missing.");
-      return;
-    }
-
-    if (!selectedRequestTime) {
-      Alert.alert("Missing Time", "Selected tutor time is missing.");
+    if (!selectedRequestDay || !selectedRequestTime) {
+      Alert.alert("Missing Schedule", "Selected tutor schedule is missing.");
       return;
     }
 
@@ -363,15 +381,9 @@ const StudentFindTutorNonVisiting = ({ navigation, route }) => {
 
   const closeRequestModal = () => {
     if (requestLoading) return;
+
     setRequestModal(false);
     resetLearningFields();
-  };
-
-  const clearSelectedTutors = () => {
-    if (requestLoading) return;
-    setSelectedTutors([]);
-    setSelectedRequestDay("");
-    setSelectedRequestTime("");
   };
 
   // ======================================================
@@ -414,7 +426,7 @@ const StudentFindTutorNonVisiting = ({ navigation, route }) => {
         const parsedDuration = Number(String(learningDuration).trim());
 
         if (
-          !learningDuration ||
+          !String(learningDuration).trim() ||
           !Number.isFinite(parsedDuration) ||
           parsedDuration <= 0
         ) {
@@ -440,14 +452,116 @@ const StudentFindTutorNonVisiting = ({ navigation, route }) => {
 
       const uniqueTutorIds = [...new Set(tutorIds)];
 
+      // =====================================
+      // VALIDATE ACCELERATED PLAN
+      // =====================================
+
+      let acceleratedDuration = null;
+      let acceleratedClassesPerWeek = null;
+      let acceleratedStartDate = null;
+
+      if (planType === "Accelerated") {
+        acceleratedDuration = Number(String(requestedDurationWeeks).trim());
+
+        acceleratedClassesPerWeek = Number(
+          String(requestedClassesPerWeek).trim()
+        );
+
+        acceleratedStartDate = String(planStartDate).trim();
+
+        if (
+          !Number.isInteger(acceleratedDuration) ||
+          acceleratedDuration <= 0
+        ) {
+          Alert.alert(
+            "Invalid Duration",
+            "Please enter a valid course duration in weeks."
+          );
+          return;
+        }
+
+        if (
+          !Number.isInteger(acceleratedClassesPerWeek) ||
+          acceleratedClassesPerWeek <= 0
+        ) {
+          Alert.alert(
+            "Invalid Classes",
+            "Please enter a valid number of classes per week."
+          );
+          return;
+        }
+
+        // Validate YYYY-MM-DD format
+        const dateMatch = acceleratedStartDate.match(
+          /^(\d{4})-(\d{2})-(\d{2})$/
+        );
+
+        if (!dateMatch) {
+          Alert.alert(
+            "Invalid Start Date",
+            "Please enter the date in YYYY-MM-DD format."
+          );
+          return;
+        }
+
+        const year = Number(dateMatch[1]);
+        const month = Number(dateMatch[2]);
+        const day = Number(dateMatch[3]);
+
+        const parsedDate = new Date(year, month - 1, day);
+
+        const validDate =
+          parsedDate.getFullYear() === year &&
+          parsedDate.getMonth() === month - 1 &&
+          parsedDate.getDate() === day;
+
+        if (!validDate) {
+          Alert.alert(
+            "Invalid Start Date",
+            "Please enter a valid calendar date."
+          );
+          return;
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (parsedDate < today) {
+          Alert.alert(
+            "Invalid Start Date",
+            "Start date cannot be in the past."
+          );
+          return;
+        }
+      }
+
+      // =====================================
+      // CREATE REQUEST BODY
+      // =====================================
+
       const requestBody = {
         tutor_ids: uniqueTutorIds,
+
         course_id: Number(courseId),
+
         day: String(selectedRequestDay).trim(),
+
         time: String(selectedRequestTime).trim(),
+
         learning_mode: learningMode,
+
         learning_duration: durationValue,
+
         learning_duration_unit: durationUnitValue,
+
+        // Accelerated course plan (null values for the Normal plan)
+        plan_type: planType,
+
+        requested_duration_weeks: acceleratedDuration,
+
+        requested_classes_per_week: acceleratedClassesPerWeek,
+
+        start_date: acceleratedStartDate,
       };
 
       console.log(
@@ -480,7 +594,7 @@ const StudentFindTutorNonVisiting = ({ navigation, route }) => {
       const responseText = await response.text();
 
       console.log("CREATE REQUEST STATUS:", response.status);
-      console.log("CREATE REQUEST BODY:", responseText);
+      console.log("CREATE REQUEST RESPONSE:", responseText);
 
       let data = {};
       try {
@@ -653,49 +767,27 @@ const StudentFindTutorNonVisiting = ({ navigation, route }) => {
   const filteredTutors = flattenedTutors.filter((item) => {
     if (!searchText) return true;
 
-    // Tutor name
     const tutorName = String(item?.tutor_name || "").toLowerCase();
-
-    // Institute
     const institute = String(item?.institute || "").toLowerCase();
+    const qualification = String(item?.qualification || "").toLowerCase();
 
-    // Qualification
-    const qualification = String(
-      item?.qualification || ""
-    ).toLowerCase();
-
-    // Programming languages
     const languages = (
       Array.isArray(item?.programming_languages)
         ? item.programming_languages
         : []
     )
-      .map((language) =>
-        String(language?.language_name || "").toLowerCase()
-      )
+      .map((language) => String(language?.language_name || "").toLowerCase())
       .join(" ");
 
-    // Previous teachers
     const previousTeachers = Array.isArray(item?.previous_teachers)
       ? item.previous_teachers
       : [];
 
     const previousTeacherMatches = previousTeachers.some((teacher) => {
-      const teacherName = String(
-        teacher?.teacher_name || ""
-      ).toLowerCase();
-
-      const teacherInstitute = String(
-        teacher?.institute || ""
-      ).toLowerCase();
-
-      const studyYear = String(
-        teacher?.study_year || ""
-      ).toLowerCase();
-
-      const description = String(
-        teacher?.description || ""
-      ).toLowerCase();
+      const teacherName = String(teacher?.teacher_name || "").toLowerCase();
+      const teacherInstitute = String(teacher?.institute || "").toLowerCase();
+      const studyYear = String(teacher?.study_year || "").toLowerCase();
+      const description = String(teacher?.description || "").toLowerCase();
 
       return (
         teacherName.includes(searchText) ||
@@ -770,9 +862,7 @@ const StudentFindTutorNonVisiting = ({ navigation, route }) => {
         <View style={styles.cardHeader}>
           <View style={styles.avatarContainer}>
             <Text style={styles.avatarText}>
-              {item?.tutor_name
-                ? item.tutor_name.charAt(0).toUpperCase()
-                : "T"}
+              {item?.tutor_name ? item.tutor_name.charAt(0).toUpperCase() : "T"}
             </Text>
           </View>
 
@@ -971,8 +1061,7 @@ const StudentFindTutorNonVisiting = ({ navigation, route }) => {
           </View>
 
           <Text style={styles.availabilityMessage}>
-            {item?.availability_message ||
-              "LT room is available for this slot."}
+            {item?.availability_message || "LT room is available for this slot."}
           </Text>
         </View>
 
@@ -1122,6 +1211,7 @@ const StudentFindTutorNonVisiting = ({ navigation, route }) => {
           data={filteredTutors}
           keyExtractor={(item) => String(item.id)}
           renderItem={renderTutor}
+          extraData={selectedTutors}
           contentContainerStyle={[
             styles.listContent,
             selectedTutors.length > 0 && styles.listContentWithSelection,
@@ -1176,6 +1266,7 @@ const StudentFindTutorNonVisiting = ({ navigation, route }) => {
 
             <ScrollView
               showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
               contentContainerStyle={styles.modalBody}
             >
               {/* SELECTED TUTORS */}
@@ -1263,7 +1354,10 @@ const StudentFindTutorNonVisiting = ({ navigation, route }) => {
                 </Text>
               </View>
 
+              {/* ===================================== */}
               {/* LEARNING MODE */}
+              {/* ===================================== */}
+
               <Text style={styles.fieldLabel}>Learning Mode</Text>
 
               <View style={styles.segmentedControl}>
@@ -1273,6 +1367,7 @@ const StudentFindTutorNonVisiting = ({ navigation, route }) => {
                     learningMode === "FullTime" && styles.segmentButtonActive,
                   ]}
                   onPress={() => setLearningMode("FullTime")}
+                  disabled={requestLoading}
                 >
                   <Text
                     style={[
@@ -1291,6 +1386,7 @@ const StudentFindTutorNonVisiting = ({ navigation, route }) => {
                       styles.segmentButtonActive,
                   ]}
                   onPress={() => setLearningMode("SpecificTime")}
+                  disabled={requestLoading}
                 >
                   <Text
                     style={[
@@ -1324,6 +1420,7 @@ const StudentFindTutorNonVisiting = ({ navigation, route }) => {
                       value={learningDuration}
                       onChangeText={setLearningDuration}
                       style={styles.modalTextInput}
+                      editable={!requestLoading}
                     />
                   </View>
 
@@ -1343,6 +1440,7 @@ const StudentFindTutorNonVisiting = ({ navigation, route }) => {
                             isSelected && styles.unitChipSelected,
                           ]}
                           onPress={() => setLearningDurationUnit(unit)}
+                          disabled={requestLoading}
                         >
                           <Text
                             style={[
@@ -1356,6 +1454,165 @@ const StudentFindTutorNonVisiting = ({ navigation, route }) => {
                       );
                     })}
                   </View>
+                </View>
+              )}
+
+              {/* ===================================== */}
+              {/* COURSE COMPLETION PLAN */}
+              {/* ===================================== */}
+
+              <Text style={[styles.fieldLabel, { marginTop: 4 }]}>
+                Course Completion Plan
+              </Text>
+
+              <Text
+                style={{ color: "#64748B", fontSize: 12, marginBottom: 10 }}
+              >
+                Choose whether you want to follow the normal course duration or
+                complete the course in a shorter period.
+              </Text>
+
+              <View style={styles.segmentedControl}>
+                <TouchableOpacity
+                  style={[
+                    styles.segmentButton,
+                    planType === "Normal" && styles.segmentButtonActive,
+                  ]}
+                  onPress={() => setPlanType("Normal")}
+                  disabled={requestLoading}
+                >
+                  <Text
+                    style={[
+                      styles.segmentText,
+                      planType === "Normal" && styles.segmentTextActive,
+                    ]}
+                  >
+                    Normal
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.segmentButton,
+                    planType === "Accelerated" && styles.segmentButtonActive,
+                  ]}
+                  onPress={() => setPlanType("Accelerated")}
+                  disabled={requestLoading}
+                >
+                  <Text
+                    style={[
+                      styles.segmentText,
+                      planType === "Accelerated" && styles.segmentTextActive,
+                    ]}
+                  >
+                    Accelerated
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {planType === "Accelerated" && (
+                <View style={styles.durationSection}>
+                  <View
+                    style={{
+                      backgroundColor: "#E8F5F2",
+                      padding: 12,
+                      borderRadius: 10,
+                      marginBottom: 15,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: "#1E8E7E",
+                        fontWeight: "700",
+                        fontSize: 14,
+                      }}
+                    >
+                      Accelerated Course Plan
+                    </Text>
+
+                    <Text
+                      style={{ color: "#475569", fontSize: 12, marginTop: 5 }}
+                    >
+                      Request more classes per week to complete your course
+                      sooner. The tutor must accept your plan.
+                    </Text>
+                  </View>
+
+                  <Text style={styles.fieldLabel}>
+                    Requested Course Duration (Weeks)
+                  </Text>
+
+                  <View style={styles.textInputWrapper}>
+                    <Icon
+                      name="date-range"
+                      size={18}
+                      color="#94A3B8"
+                      style={{ marginRight: 8 }}
+                    />
+
+                    <TextInput
+                      placeholder="Example: 8"
+                      placeholderTextColor="#94A3B8"
+                      keyboardType="numeric"
+                      value={requestedDurationWeeks}
+                      onChangeText={setRequestedDurationWeeks}
+                      style={styles.modalTextInput}
+                      editable={!requestLoading}
+                    />
+                  </View>
+
+                  <Text style={[styles.fieldLabel, { marginTop: 14 }]}>
+                    Classes Per Week
+                  </Text>
+
+                  <View style={styles.textInputWrapper}>
+                    <Icon
+                      name="school"
+                      size={18}
+                      color="#94A3B8"
+                      style={{ marginRight: 8 }}
+                    />
+
+                    <TextInput
+                      placeholder="Example: 2"
+                      placeholderTextColor="#94A3B8"
+                      keyboardType="numeric"
+                      value={requestedClassesPerWeek}
+                      onChangeText={setRequestedClassesPerWeek}
+                      style={styles.modalTextInput}
+                      editable={!requestLoading}
+                    />
+                  </View>
+
+                  <Text style={[styles.fieldLabel, { marginTop: 14 }]}>
+                    Preferred Start Date
+                  </Text>
+
+                  <View style={styles.textInputWrapper}>
+                    <Icon
+                      name="event"
+                      size={18}
+                      color="#94A3B8"
+                      style={{ marginRight: 8 }}
+                    />
+
+                    <TextInput
+                      placeholder="YYYY-MM-DD"
+                      placeholderTextColor="#94A3B8"
+                      value={planStartDate}
+                      onChangeText={setPlanStartDate}
+                      style={styles.modalTextInput}
+                      editable={!requestLoading}
+                      autoCapitalize="none"
+                    />
+                  </View>
+
+                  <Text
+                    style={{ color: "#94A3B8", fontSize: 11, marginTop: 5 }}
+                  >
+                    Enter the date in YYYY-MM-DD format, for example
+                    2026-11-15.
+                  </Text>
                 </View>
               )}
 
