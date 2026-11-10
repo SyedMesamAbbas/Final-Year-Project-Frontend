@@ -730,13 +730,15 @@ Delete Request_Group where request_group_id=1013
 Delete Request_Course_Plan where request_group_id=1013
 Delete Request where request_group_id=1013
 Delete Request where request_id=5118
+Delete Request where course_id=7
 Delete Request where tutor_id=2 and student_id=2
 
+update Request set status='Complete' where course_id=6
 update Request set status='Pending' where request_id=5121
 update Request set status='Pending' where request_id=5122
 
 Delete Request where request_id in (5123,5124,5125,5126,5127,5128,5129,5130,5131,5132,5133,5134,5135,5136,5137,5138,5139,5140,5141,5142,5143,5144,5145,5146,5147,5148,5149,5150,5151,5152)
-
+update Tutor_Course set is_completed=0 where course_id=6
 
 update Request_Group set status='Searching' where request_group_id=1010
 update Request set status='Pending' where request_id=5116
@@ -763,6 +765,8 @@ update Tutor set status='Approved' where user_id=2
 update Tutor set radius=3 where tutor_id=1011
 update student set Latitude='33.6844' where student_id=1030
 update student set Longitude='73.0479' where student_id=1030
+update Request_Course_Plan set Status='Completed' where request_group_id=1015
+
 
 delete Request where request_id=4048
 
