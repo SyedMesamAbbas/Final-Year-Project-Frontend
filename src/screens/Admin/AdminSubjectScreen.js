@@ -34,18 +34,29 @@ const AdminSubjectScreen = ({navigation}) => {
   // Modal
   const [modalVisible, setModalVisible] = useState(false);
 
-  // Form fields
+  // Course form fields
   const [courseTitle, setCourseTitle] = useState("");
   const [institute, setInstitute] = useState("");
   const [courseCode, setCourseCode] = useState("");
   const [program, setProgram] = useState("");
   const [description, setDescription] = useState("");
+
+  // Hourly rates
   const [minRate, setMinRate] = useState("");
   const [maxRate, setMaxRate] = useState("");
+
+  // NEW: Standard course duration
+  const [standardDurationWeeks, setStandardDurationWeeks] =
+    useState("16");
+
+  // NEW: Standard classes per week
+  const [standardClassesPerWeek, setStandardClassesPerWeek] =
+    useState("1");
 
   // =====================================================
   // FETCH SUBJECTS
   // =====================================================
+
   const fetchSubjects = async (isPullToRefresh = false) => {
     try {
       if (isPullToRefresh) {
@@ -54,7 +65,15 @@ const AdminSubjectScreen = ({navigation}) => {
         setLoading(true);
       }
 
-      const response = await fetch(`${BASE_URL}/Admin/all-subjects`);
+      const response = await fetch(
+        `${BASE_URL}/Admin/all-subjects`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
+        },
+      );
 
       let result = {};
 
@@ -94,6 +113,7 @@ const AdminSubjectScreen = ({navigation}) => {
   // =====================================================
   // RESET FORM
   // =====================================================
+
   const resetForm = () => {
     setCourseTitle("");
     setInstitute("");
@@ -102,11 +122,16 @@ const AdminSubjectScreen = ({navigation}) => {
     setDescription("");
     setMinRate("");
     setMaxRate("");
+
+    // Reset new fields
+    setStandardDurationWeeks("16");
+    setStandardClassesPerWeek("1");
   };
 
   // =====================================================
   // CLOSE MODAL
   // =====================================================
+
   const closeModal = () => {
     if (saving) {
       return;
@@ -119,14 +144,25 @@ const AdminSubjectScreen = ({navigation}) => {
   // =====================================================
   // OPEN ADD MODAL
   // =====================================================
+
   const openAddModal = () => {
     resetForm();
     setModalVisible(true);
   };
 
   // =====================================================
-  // HANDLE RATE INPUT
+  // INTEGER INPUT HANDLER
   // =====================================================
+
+  const handleIntegerChange = (value, setter) => {
+    const cleanedValue = value.replace(/[^0-9]/g, "");
+    setter(cleanedValue);
+  };
+
+  // =====================================================
+  // RATE INPUT HANDLER
+  // =====================================================
+
   const handleRateChange = (value, setter) => {
     const cleanedValue = value.replace(/[^0-9.]/g, "");
     const parts = cleanedValue.split(".");
@@ -139,37 +175,101 @@ const AdminSubjectScreen = ({navigation}) => {
   };
 
   // =====================================================
+  // CALCULATE TOTAL STANDARD CLASSES
+  // =====================================================
+
+  const durationNumber = Number(standardDurationWeeks);
+  const weeklyClassesNumber = Number(standardClassesPerWeek);
+
+  const totalStandardClasses =
+    durationNumber > 0 && weeklyClassesNumber > 0
+      ? durationNumber * weeklyClassesNumber
+      : 0;
+
+  // =====================================================
   // ADD SUBJECT / COURSE CODE
   // =====================================================
+
   const handleAddSubject = async () => {
-    // Course title validation
+    // Course title
     if (!courseTitle.trim()) {
       Alert.alert("Required", "Please enter course title");
       return;
     }
 
-    // Institute validation
+    // Institute
     if (!institute.trim()) {
       Alert.alert("Required", "Please enter institute name");
       return;
     }
 
-    // Course code validation
+    // Course code
     if (!courseCode.trim()) {
       Alert.alert("Required", "Please enter course code");
       return;
     }
 
-    // Rate validation
-    // Rates are optional for an existing common course.
-    // Backend requires both rates for a new course.
+    // =================================================
+    // VALIDATE STANDARD DURATION
+    // =================================================
+
+    if (!standardDurationWeeks.trim()) {
+      Alert.alert(
+        "Required",
+        "Please enter standard course duration in weeks.",
+      );
+      return;
+    }
+
+    const duration = Number(standardDurationWeeks);
+
+    if (
+      !Number.isInteger(duration) ||
+      duration <= 0
+    ) {
+      Alert.alert(
+        "Invalid Duration",
+        "Course duration must be a positive whole number.",
+      );
+      return;
+    }
+
+    // =================================================
+    // VALIDATE CLASSES PER WEEK
+    // =================================================
+
+    if (!standardClassesPerWeek.trim()) {
+      Alert.alert(
+        "Required",
+        "Please enter standard classes per week.",
+      );
+      return;
+    }
+
+    const classesPerWeek = Number(standardClassesPerWeek);
+
+    if (
+      !Number.isInteger(classesPerWeek) ||
+      classesPerWeek <= 0
+    ) {
+      Alert.alert(
+        "Invalid Classes",
+        "Classes per week must be a positive whole number.",
+      );
+      return;
+    }
+
+    // =================================================
+    // VALIDATE RATES
+    // =================================================
+
     const hasMinRate = minRate.trim() !== "";
     const hasMaxRate = maxRate.trim() !== "";
 
     if (hasMinRate !== hasMaxRate) {
       Alert.alert(
         "Invalid Rates",
-        "Please enter both minimum and maximum rates, or leave both empty.",
+        "Enter both minimum and maximum rates, or leave both empty.",
       );
       return;
     }
@@ -185,51 +285,71 @@ const AdminSubjectScreen = ({navigation}) => {
         !Number.isFinite(minimumRate) ||
         !Number.isFinite(maximumRate)
       ) {
-        Alert.alert("Error", "Please enter valid rates");
+        Alert.alert("Error", "Please enter valid rates.");
         return;
       }
 
       if (minimumRate < 0 || maximumRate < 0) {
-        Alert.alert("Error", "Rates cannot be negative");
+        Alert.alert(
+          "Error",
+          "Rates cannot be negative.",
+        );
         return;
       }
 
       if (minimumRate > maximumRate) {
         Alert.alert(
           "Error",
-          "Minimum rate cannot be greater than maximum rate",
+          "Minimum rate cannot be greater than maximum rate.",
         );
         return;
       }
     }
 
+    // =================================================
+    // SEND REQUEST TO BACKEND
+    // =================================================
+
     try {
       setSaving(true);
 
-      // =================================================
-      // REQUEST BODY
-      // Matches AddSubjectDTO in backend
-      // =================================================
       const requestBody = {
         courseTitle: courseTitle.trim(),
+
         institute: institute.trim(),
+
         courseCode: courseCode.trim().toUpperCase(),
+
         program: program.trim() || null,
+
         description: description.trim() || null,
+
         minRate: minimumRate,
+
         maxRate: maximumRate,
+
+        // NEW BACKEND PROPERTIES
+        standardDurationWeeks: duration,
+
+        standardClassesPerWeek: classesPerWeek,
       };
 
-      console.log("Add Subject Request:", requestBody);
+      console.log(
+        "Add Subject Request:",
+        JSON.stringify(requestBody, null, 2),
+      );
 
-      const response = await fetch(`${BASE_URL}/Admin/add-subject`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
+      const response = await fetch(
+        `${BASE_URL}/Admin/add-subject`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify(requestBody),
         },
-        body: JSON.stringify(requestBody),
-      });
+      );
 
       let result = {};
 
@@ -238,38 +358,67 @@ const AdminSubjectScreen = ({navigation}) => {
       } catch (jsonError) {
         console.log("Add Subject JSON Error:", jsonError);
       }
-      console.log('Add Subject Validation Errors:',JSON.stringify(result, null, 2));
-      console.log("Add Subject Response:", result);
+
+      console.log(
+        "Add Subject Response:",
+        JSON.stringify(result, null, 2),
+      );
 
       if (response.ok) {
-        const successMessage =
-          result?.message || "Course added successfully";
-
         const courseCreated = result?.courseCreated;
 
-        const finalMessage = courseCreated === true
-          ? `${successMessage}\n\nA new common course was created successfully.`
-          : courseCreated === false
-            ? `${successMessage}\n\nThe course already existed. Its new university course code was added successfully.`
-            : successMessage;
+        const successMessage =
+          result?.message || "Course added successfully.";
 
-        Alert.alert("Success", finalMessage);
+        let finalMessage = successMessage;
+
+        if (courseCreated === true) {
+          finalMessage +=
+            "\n\nA new common course was created successfully.";
+        } else if (courseCreated === false) {
+          finalMessage +=
+            "\n\nThe existing common course was updated with the new standard duration, weekly classes and university course code.";
+        }
+
+        finalMessage +=
+          `\n\nStandard Duration: ${duration} weeks` +
+          `\nClasses Per Week: ${classesPerWeek}` +
+          `\nTotal Standard Classes: ${duration * classesPerWeek}`;
 
         resetForm();
         setModalVisible(false);
 
         await fetchSubjects();
+
+        Alert.alert("Success", finalMessage);
       } else {
-        Alert.alert(
-          "Error",
+        let errorMessage =
           result?.message ||
-            result?.error ||
-            "Failed to add course",
-        );
+          result?.error ||
+          "Failed to add course.";
+
+        // Handle ASP.NET validation errors
+        if (result?.errors) {
+          const validationMessages = Object.values(
+            result.errors,
+          )
+            .flat()
+            .join("\n");
+
+          if (validationMessages) {
+            errorMessage += "\n\n" + validationMessages;
+          }
+        }
+
+        Alert.alert("Error", errorMessage);
       }
     } catch (error) {
       console.log("Add Subject Error:", error);
-      Alert.alert("Error", "Unable to connect to server");
+
+      Alert.alert(
+        "Error",
+        "Unable to connect to server.",
+      );
     } finally {
       setSaving(false);
     }
@@ -278,6 +427,7 @@ const AdminSubjectScreen = ({navigation}) => {
   // =====================================================
   // DELETE SUBJECT
   // =====================================================
+
   const handleDelete = id => {
     if (!id) {
       Alert.alert("Error", "Course ID not found");
@@ -295,6 +445,7 @@ const AdminSubjectScreen = ({navigation}) => {
         {
           text: "Delete",
           style: "destructive",
+
           onPress: async () => {
             try {
               const response = await fetch(
@@ -315,32 +466,40 @@ const AdminSubjectScreen = ({navigation}) => {
                 console.log("Delete JSON Error:", error);
               }
 
-              console.log("Delete Subject Response:", result);
+              console.log(
+                "Delete Subject Response:",
+                result,
+              );
 
               if (response.ok) {
-                setSubjects(prev =>
-                  prev.filter(
+                setSubjects(previous =>
+                  previous.filter(
                     item =>
-                      item.courseId !== id &&
-                      item.id !== id,
+                      Number(item.id ?? item.courseId) !==
+                      Number(id),
                   ),
                 );
 
                 Alert.alert(
                   "Success",
-                  result?.message || "Subject deleted successfully",
+                  result?.message ||
+                    "Subject deleted successfully.",
                 );
               } else {
                 Alert.alert(
                   "Error",
                   result?.message ||
                     result?.error ||
-                    "Failed to delete subject",
+                    "Failed to delete subject.",
                 );
               }
             } catch (error) {
               console.log("Delete Subject Error:", error);
-              Alert.alert("Error", "Unable to connect to server");
+
+              Alert.alert(
+                "Error",
+                "Unable to connect to server.",
+              );
             }
           },
         },
@@ -351,6 +510,7 @@ const AdminSubjectScreen = ({navigation}) => {
   // =====================================================
   // FETCH ON SCREEN LOAD
   // =====================================================
+
   useEffect(() => {
     fetchSubjects();
   }, []);
@@ -358,25 +518,41 @@ const AdminSubjectScreen = ({navigation}) => {
   // =====================================================
   // SUBJECT INITIALS
   // =====================================================
+
   const getSubjectIconText = name => {
     if (!name) {
       return "SB";
     }
 
-    const words = name.trim().split(" ");
+    const words = name.trim().split(/\s+/);
 
     if (words.length >= 2) {
-      return `${words[0][0]}${words[1][0]}`.toUpperCase();
+      return (
+        words[0][0] + words[1][0]
+      ).toUpperCase();
     }
 
     return name.slice(0, 2).toUpperCase();
   };
 
   // =====================================================
+  // FORMAT RATE
+  // =====================================================
+
+  const formatRate = rate => {
+    if (rate === null || rate === undefined) {
+      return "Not Set";
+    }
+
+    return `Rs. ${Number(rate).toLocaleString()}`;
+  };
+
+  // =====================================================
   // SUBJECT ITEM
   // =====================================================
+
   const renderItem = ({item}) => {
-    const subjectId = item.courseId ?? item.id;
+    const subjectId = item.id ?? item.courseId;
 
     const title =
       item.courseTitle ?? item.name ?? "Unknown Subject";
@@ -387,12 +563,27 @@ const AdminSubjectScreen = ({navigation}) => {
     const itemMaxRate =
       item.maxRate ?? item.adminSetMaxHourlyRate;
 
-    // Supports course codes if all-subjects returns them
-    const courseCodes =
-      item.courseCodes ?? item.courseCodesList ?? [];
+    // Backend returns these exact properties
+    const duration = item.standardDurationWeeks;
+
+    const classesPerWeek = item.standardClassesPerWeek;
+
+    const totalClasses =
+      item.totalStandardClasses ??
+      (
+        Number(duration || 0) *
+        Number(classesPerWeek || 0)
+      );
+
+    // Backend returns courseCodes array
+    const courseCodes = Array.isArray(item.courseCodes)
+      ? item.courseCodes
+      : [];
 
     return (
       <View style={styles.card}>
+        {/* CARD HEADER */}
+
         <View style={styles.cardHeaderRow}>
           <View style={styles.avatarContainer}>
             <Text style={styles.avatarText}>
@@ -401,7 +592,9 @@ const AdminSubjectScreen = ({navigation}) => {
           </View>
 
           <View style={styles.titleWrapper}>
-            <Text style={styles.subjectText} numberOfLines={2}>
+            <Text
+              style={styles.subjectText}
+              numberOfLines={2}>
               {title}
             </Text>
 
@@ -415,22 +608,94 @@ const AdminSubjectScreen = ({navigation}) => {
             onPress={() => handleDelete(subjectId)}
             disabled={!subjectId}
             activeOpacity={0.7}>
-            <Icon name="delete-outline" size={20} color="#EF4444" />
+            <Icon
+              name="delete-outline"
+              size={20}
+              color="#EF4444"
+            />
           </TouchableOpacity>
         </View>
 
-        {/* University Course Codes */}
-        {Array.isArray(courseCodes) && courseCodes.length > 0 && (
-          <View style={styles.courseCodesContainer}>
-            <Text style={styles.courseCodesHeading}>
-              University Course Codes
+        {/* STANDARD COURSE PLAN */}
+
+        <View style={styles.durationContainer}>
+          <View style={styles.sectionHeadingRow}>
+            <Icon
+              name="calendar-month"
+              size={19}
+              color={PRIMARY_COLOR}
+            />
+
+            <Text style={styles.sectionHeading}>
+              Standard Course Plan
             </Text>
+          </View>
+
+          <View style={styles.durationStatsRow}>
+            <View style={styles.durationStat}>
+              <Text style={styles.durationNumber}>
+                {duration ?? "N/A"}
+              </Text>
+
+              <Text style={styles.durationLabel}>
+                Weeks
+              </Text>
+            </View>
+
+            <View style={styles.durationDivider} />
+
+            <View style={styles.durationStat}>
+              <Text style={styles.durationNumber}>
+                {classesPerWeek ?? "N/A"}
+              </Text>
+
+              <Text style={styles.durationLabel}>
+                Classes / Week
+              </Text>
+            </View>
+
+            <View style={styles.durationDivider} />
+
+            <View style={styles.durationStat}>
+              <Text style={styles.durationNumber}>
+                {totalClasses}
+              </Text>
+
+              <Text style={styles.durationLabel}>
+                Total Classes
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* UNIVERSITY COURSE CODES */}
+
+        {courseCodes.length > 0 && (
+          <View style={styles.courseCodesContainer}>
+            <View style={styles.sectionHeadingRow}>
+              <Icon
+                name="account-balance"
+                size={18}
+                color={PRIMARY_COLOR}
+              />
+
+              <Text style={styles.courseCodesHeading}>
+                University Course Codes ({courseCodes.length})
+              </Text>
+            </View>
 
             {courseCodes.map((code, index) => (
-              <View key={String(code.courseCodeId ?? index)}>
+              <View
+                key={String(
+                  code.courseCodeId ?? index,
+                )}
+                style={styles.courseCodeItem}>
                 <Text style={styles.courseCodeText}>
-                  {code.courseCode ?? code.courseCode1 ?? "N/A"}
-                  {code.institute ? ` - ${code.institute}` : ""}
+                  {code.courseCode ?? "N/A"}
+                </Text>
+
+                <Text style={styles.instituteText}>
+                  {code.institute || "Institute not specified"}
                 </Text>
 
                 {code.program ? (
@@ -438,37 +703,63 @@ const AdminSubjectScreen = ({navigation}) => {
                     Program: {code.program}
                   </Text>
                 ) : null}
+
+                {code.description ? (
+                  <Text style={styles.descriptionText}>
+                    {code.description}
+                  </Text>
+                ) : null}
               </View>
             ))}
           </View>
         )}
 
+        {/* RATES */}
+
         <View style={styles.cardDivider} />
 
         <View style={styles.ratesContainer}>
-          <View style={[styles.rateBadge, styles.minRateBadge]}>
+          <View
+            style={[
+              styles.rateBadge,
+              styles.minRateBadge,
+            ]}>
             <View style={styles.rateHeader}>
-              <Icon name="trending-down" size={14} color="#059669" />
-              <Text style={styles.rateLabel}>Min Rate</Text>
+              <Icon
+                name="trending-down"
+                size={14}
+                color="#059669"
+              />
+
+              <Text style={styles.rateLabel}>
+                Min Rate
+              </Text>
             </View>
 
             <Text style={styles.rateValueMin}>
-              {itemMinRate !== null && itemMinRate !== undefined
-                ? `Rs. ${Number(itemMinRate).toLocaleString()}`
-                : "Not Set"}
+              {formatRate(itemMinRate)}
             </Text>
           </View>
 
-          <View style={[styles.rateBadge, styles.maxRateBadge]}>
+          <View
+            style={[
+              styles.rateBadge,
+              styles.maxRateBadge,
+            ]}>
             <View style={styles.rateHeader}>
-              <Icon name="trending-up" size={14} color={PRIMARY_COLOR} />
-              <Text style={styles.rateLabel}>Max Rate</Text>
+              <Icon
+                name="trending-up"
+                size={14}
+                color={PRIMARY_COLOR}
+              />
+
+              <Text style={styles.rateLabel}>
+                Max Rate
+              </Text>
             </View>
 
             <Text style={styles.rateValueMax}>
-              {itemMaxRate !== null && itemMaxRate !== undefined
-                ? `Rs. ${Number(itemMaxRate).toLocaleString()}`
-                : "Not Set"}
+              {formatRate(itemMaxRate)}
             </Text>
           </View>
         </View>
@@ -477,8 +768,9 @@ const AdminSubjectScreen = ({navigation}) => {
   };
 
   // =====================================================
-  // INPUT COMPONENT
+  // REUSABLE INPUT COMPONENT
   // =====================================================
+
   const renderInput = ({
     label,
     placeholder,
@@ -493,9 +785,14 @@ const AdminSubjectScreen = ({navigation}) => {
     <View style={styles.inputGroup}>
       <Text style={styles.fieldLabel}>
         {label}{" "}
-        {required && <Text style={styles.requiredStar}>*</Text>}
+        {required && (
+          <Text style={styles.requiredStar}>*</Text>
+        )}
+
         {!required && (
-          <Text style={styles.optionalText}> (Optional)</Text>
+          <Text style={styles.optionalText}>
+            {" "}(Optional)
+          </Text>
         )}
       </Text>
 
@@ -533,6 +830,7 @@ const AdminSubjectScreen = ({navigation}) => {
   // =====================================================
   // MAIN UI
   // =====================================================
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar
@@ -541,12 +839,17 @@ const AdminSubjectScreen = ({navigation}) => {
       />
 
       {/* HEADER */}
+
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.headerIconButton}
           onPress={() => navigation.goBack()}
           activeOpacity={0.7}>
-          <Icon name="arrow-back-ios" size={18} color="#333333" />
+          <Icon
+            name="arrow-back-ios"
+            size={18}
+            color="#333333"
+          />
         </TouchableOpacity>
 
         <Image
@@ -560,21 +863,33 @@ const AdminSubjectScreen = ({navigation}) => {
           onPress={() => fetchSubjects()}
           disabled={loading || refreshing}
           activeOpacity={0.7}>
-          <Icon name="refresh" size={22} color={PRIMARY_COLOR} />
+          <Icon
+            name="refresh"
+            size={22}
+            color={PRIMARY_COLOR}
+          />
         </TouchableOpacity>
       </View>
 
       {/* TITLE */}
+
       <View style={styles.topSection}>
-        <Text style={styles.title}>Subject Management</Text>
+        <Text style={styles.title}>
+          Subject Management
+        </Text>
 
         <Text style={styles.subtitle}>
-          Manage courses, university course codes and tutor hourly rates.
+          Manage courses, university course codes, standard
+          course duration, weekly classes and tutor hourly rates.
         </Text>
 
         <View style={styles.statsBanner}>
           <View style={styles.statsItem}>
-            <Icon name="library-books" size={18} color={PRIMARY_COLOR} />
+            <Icon
+              name="library-books"
+              size={18}
+              color={PRIMARY_COLOR}
+            />
 
             <Text style={styles.statsText}>
               Total Courses:{" "}
@@ -589,22 +904,32 @@ const AdminSubjectScreen = ({navigation}) => {
             onPress={openAddModal}
             activeOpacity={0.8}>
             <Icon name="add" size={16} color="#FFFFFF" />
-            <Text style={styles.addInlineButtonText}>Add New</Text>
+
+            <Text style={styles.addInlineButtonText}>
+              Add New
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
 
       {/* SUBJECT LIST */}
+
       {loading ? (
         <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color={PRIMARY_COLOR} />
-          <Text style={styles.loaderText}>Loading courses...</Text>
+          <ActivityIndicator
+            size="large"
+            color={PRIMARY_COLOR}
+          />
+
+          <Text style={styles.loaderText}>
+            Loading courses...
+          </Text>
         </View>
       ) : (
         <FlatList
           data={subjects}
           keyExtractor={(item, index) =>
-            String(item.courseId ?? item.id ?? index)
+            String(item.id ?? item.courseId ?? index)
           }
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
@@ -620,7 +945,11 @@ const AdminSubjectScreen = ({navigation}) => {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <View style={styles.emptyIconCircle}>
-                <Icon name="menu-book" size={48} color="#94A3B8" />
+                <Icon
+                  name="menu-book"
+                  size={48}
+                  color="#94A3B8"
+                />
               </View>
 
               <Text style={styles.emptyTitle}>
@@ -628,8 +957,8 @@ const AdminSubjectScreen = ({navigation}) => {
               </Text>
 
               <Text style={styles.emptySubtext}>
-                Start by adding your first course and its university
-                course code.
+                Start by adding your first course and its
+                university course code.
               </Text>
 
               <TouchableOpacity
@@ -637,6 +966,7 @@ const AdminSubjectScreen = ({navigation}) => {
                 onPress={openAddModal}
                 activeOpacity={0.8}>
                 <Icon name="add" size={18} color="#FFFFFF" />
+
                 <Text style={styles.emptyActionText}>
                   Add Course
                 </Text>
@@ -647,19 +977,24 @@ const AdminSubjectScreen = ({navigation}) => {
       )}
 
       {/* FLOATING ADD BUTTON */}
+
       {subjects.length > 0 && !loading && (
         <TouchableOpacity
           style={styles.fabButton}
           onPress={openAddModal}
           activeOpacity={0.85}>
           <Icon name="add" size={22} color="#FFFFFF" />
-          <Text style={styles.fabText}>Add Course</Text>
+
+          <Text style={styles.fabText}>
+            Add Course
+          </Text>
         </TouchableOpacity>
       )}
 
       {/* =====================================================
           ADD COURSE MODAL
           ===================================================== */}
+
       <Modal
         visible={modalVisible}
         transparent
@@ -682,7 +1017,9 @@ const AdminSubjectScreen = ({navigation}) => {
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
               contentContainerStyle={styles.modalScrollContent}>
+
               {/* MODAL HEADER */}
+
               <View style={styles.modalHeader}>
                 <View style={styles.modalHeaderTitleRow}>
                   <View style={styles.modalIconContainer}>
@@ -699,7 +1036,7 @@ const AdminSubjectScreen = ({navigation}) => {
                     </Text>
 
                     <Text style={styles.modalSubtitle}>
-                      Enter course and university details
+                      Enter course, university and standard plan details
                     </Text>
                   </View>
                 </View>
@@ -708,13 +1045,20 @@ const AdminSubjectScreen = ({navigation}) => {
                   style={styles.closeIconButton}
                   onPress={closeModal}
                   disabled={saving}>
-                  <Icon name="close" size={20} color="#64748B" />
+                  <Icon
+                    name="close"
+                    size={20}
+                    color="#64748B"
+                  />
                 </TouchableOpacity>
               </View>
 
               {/* FORM */}
+
               <View style={styles.formContainer}>
+
                 {/* COURSE TITLE */}
+
                 {renderInput({
                   label: "Course Title",
                   placeholder: "e.g. Object Oriented Programming",
@@ -726,6 +1070,7 @@ const AdminSubjectScreen = ({navigation}) => {
                 })}
 
                 {/* INSTITUTE */}
+
                 {renderInput({
                   label: "Institute / University",
                   placeholder: "e.g. PMAS Arid Agriculture University",
@@ -737,8 +1082,9 @@ const AdminSubjectScreen = ({navigation}) => {
                 })}
 
                 {/* COURSE CODE */}
+
                 {renderInput({
-                  label: "Course Code",
+                  label: "University Course Code",
                   placeholder: "e.g. CSC-201",
                   value: courseCode,
                   onChangeText: text =>
@@ -749,6 +1095,7 @@ const AdminSubjectScreen = ({navigation}) => {
                 })}
 
                 {/* PROGRAM */}
+
                 {renderInput({
                   label: "Program",
                   placeholder: "e.g. BS Software Engineering",
@@ -759,6 +1106,7 @@ const AdminSubjectScreen = ({navigation}) => {
                 })}
 
                 {/* DESCRIPTION */}
+
                 {renderInput({
                   label: "Description",
                   placeholder: "Enter course description...",
@@ -769,7 +1117,130 @@ const AdminSubjectScreen = ({navigation}) => {
                   autoCapitalize: "sentences",
                 })}
 
-                {/* RATE SECTION */}
+                {/* =================================================
+                    NEW: STANDARD COURSE PLAN
+                    ================================================= */}
+
+                <View style={styles.planSection}>
+                  <View style={styles.rateSectionHeader}>
+                    <Icon
+                      name="calendar-month"
+                      size={20}
+                      color={PRIMARY_COLOR}
+                    />
+
+                    <Text style={styles.rateSectionTitle}>
+                      Standard Course Plan
+                    </Text>
+
+                    <Text style={styles.requiredStar}>*</Text>
+                  </View>
+
+                  <Text style={styles.rateSectionSubtitle}>
+                    Set the normal duration and number of classes
+                    conducted per week for this course.
+                  </Text>
+
+                  <View style={styles.ratesInputRow}>
+
+                    {/* DURATION WEEKS */}
+
+                    <View style={[styles.inputGroup, {flex: 1}]}>
+                      <Text style={styles.fieldLabel}>
+                        Duration (Weeks) *
+                      </Text>
+
+                      <View style={styles.inputWrapper}>
+                        <Icon
+                          name="date-range"
+                          size={18}
+                          color={PRIMARY_COLOR}
+                          style={styles.inputIcon}
+                        />
+
+                        <TextInput
+                          placeholder="e.g. 16"
+                          placeholderTextColor="#94A3B8"
+                          value={standardDurationWeeks}
+                          onChangeText={text =>
+                            handleIntegerChange(
+                              text,
+                              setStandardDurationWeeks,
+                            )
+                          }
+                          style={styles.input}
+                          editable={!saving}
+                          keyboardType="number-pad"
+                          maxLength={3}
+                        />
+                      </View>
+                    </View>
+
+                    {/* CLASSES PER WEEK */}
+
+                    <View style={[styles.inputGroup, {flex: 1}]}>
+                      <Text style={styles.fieldLabel}>
+                        Classes / Week *
+                      </Text>
+
+                      <View style={styles.inputWrapper}>
+                        <Icon
+                          name="event"
+                          size={18}
+                          color={PRIMARY_COLOR}
+                          style={styles.inputIcon}
+                        />
+
+                        <TextInput
+                          placeholder="e.g. 1"
+                          placeholderTextColor="#94A3B8"
+                          value={standardClassesPerWeek}
+                          onChangeText={text =>
+                            handleIntegerChange(
+                              text,
+                              setStandardClassesPerWeek,
+                            )
+                          }
+                          style={styles.input}
+                          editable={!saving}
+                          keyboardType="number-pad"
+                          maxLength={2}
+                        />
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* AUTOMATIC TOTAL CLASSES */}
+
+                  <View style={styles.totalClassesBox}>
+                    <View style={styles.totalClassesLeft}>
+                      <Icon
+                        name="calculate"
+                        size={22}
+                        color={PRIMARY_COLOR}
+                      />
+
+                      <View style={{flex: 1}}>
+                        <Text style={styles.totalClassesTitle}>
+                          Total Standard Classes
+                        </Text>
+
+                        <Text style={styles.totalClassesFormula}>
+                          Weeks × Classes per week
+                        </Text>
+                      </View>
+                    </View>
+
+                    <Text style={styles.totalClassesNumber}>
+                      {totalStandardClasses}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* =================================================
+                    HOURLY RATE SECTION
+                    ================================================= */}
+
                 <View style={styles.rateSection}>
                   <View style={styles.rateSectionHeader}>
                     <Icon
@@ -784,13 +1255,15 @@ const AdminSubjectScreen = ({navigation}) => {
                   </View>
 
                   <Text style={styles.rateSectionSubtitle}>
-                    Required only when this course does not already
-                    exist in the system. Enter both rates or leave
-                    both empty.
+                    Required when creating a new common course.
+                    For an existing course, leave both empty or
+                    enter both rates.
                   </Text>
 
                   <View style={styles.ratesInputRow}>
+
                     {/* MIN RATE */}
+
                     <View style={[styles.inputGroup, {flex: 1}]}>
                       <Text style={styles.fieldLabel}>
                         Min Rate (PKR)
@@ -819,6 +1292,7 @@ const AdminSubjectScreen = ({navigation}) => {
                     </View>
 
                     {/* MAX RATE */}
+
                     <View style={[styles.inputGroup, {flex: 1}]}>
                       <Text style={styles.fieldLabel}>
                         Max Rate (PKR)
@@ -849,6 +1323,7 @@ const AdminSubjectScreen = ({navigation}) => {
                 </View>
 
                 {/* INFORMATION */}
+
                 <View style={styles.infoBox}>
                   <Icon
                     name="info-outline"
@@ -858,14 +1333,19 @@ const AdminSubjectScreen = ({navigation}) => {
 
                   <Text style={styles.infoBoxText}>
                     If the course title already exists, the system
-                    will only add its new university-specific course
-                    code. If it is a new course, minimum and maximum
-                    hourly rates are required.
+                    adds the new university-specific course code
+                    and updates the common course's standard duration
+                    and classes per week. Existing student course
+                    plans remain unchanged according to your backend.
+                    For a new course, both minimum and maximum rates
+                    are required.
                   </Text>
                 </View>
+
               </View>
 
               {/* MODAL BUTTONS */}
+
               <View style={styles.modalFooter}>
                 <TouchableOpacity
                   style={styles.cancelButton}
@@ -892,7 +1372,12 @@ const AdminSubjectScreen = ({navigation}) => {
                     />
                   ) : (
                     <>
-                      <Icon name="check" size={18} color="#FFFFFF" />
+                      <Icon
+                        name="check"
+                        size={18}
+                        color="#FFFFFF"
+                      />
+
                       <Text style={styles.submitButtonText}>
                         Save Course
                       </Text>
@@ -900,12 +1385,14 @@ const AdminSubjectScreen = ({navigation}) => {
                   )}
                 </TouchableOpacity>
               </View>
+
             </ScrollView>
           </View>
         </KeyboardAvoidingView>
       </Modal>
 
       {/* BOTTOM NAVIGATION */}
+
       <View style={styles.bottomNav}>
         <TouchableOpacity
           style={styles.navItem}
@@ -934,8 +1421,14 @@ const AdminSubjectScreen = ({navigation}) => {
         <TouchableOpacity
           style={styles.navItem}
           activeOpacity={1}>
-          <Icon name="menu-book" size={22} color={PRIMARY_COLOR} />
-          <Text style={styles.navTextActive}>Subject</Text>
+          <Icon
+            name="menu-book"
+            size={22}
+            color={PRIMARY_COLOR}
+          />
+          <Text style={styles.navTextActive}>
+            Subject
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -1101,30 +1594,93 @@ const styles = StyleSheet.create({
     borderColor: "#FEE2E2",
   },
 
+  // Standard duration card section
+  durationContainer: {
+    backgroundColor: "#F0F9F6",
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 14,
+    borderWidth: 1,
+    borderColor: "#C8E8DE",
+  },
+  sectionHeadingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    marginBottom: 10,
+  },
+  sectionHeading: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#334155",
+  },
+  durationStatsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+  },
+  durationStat: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 5,
+  },
+  durationNumber: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: PRIMARY_COLOR,
+  },
+  durationLabel: {
+    fontSize: 10,
+    color: "#64748B",
+    fontWeight: "600",
+    marginTop: 3,
+    textAlign: "center",
+  },
+  durationDivider: {
+    width: 1,
+    height: 35,
+    backgroundColor: "#C8E8DE",
+  },
+
   // Course codes
   courseCodesContainer: {
     backgroundColor: "#F8FAFC",
     borderRadius: 10,
     padding: 10,
     marginTop: 12,
-    gap: 5,
   },
   courseCodesHeading: {
     fontSize: 12,
     fontWeight: "700",
     color: PRIMARY_COLOR,
-    marginBottom: 3,
+  },
+  courseCodeItem: {
+    borderTopWidth: 1,
+    borderTopColor: "#E2E8F0",
+    paddingTop: 9,
+    paddingBottom: 5,
+    marginTop: 5,
   },
   courseCodeText: {
-    fontSize: 12,
-    fontWeight: "600",
+    fontSize: 13,
+    fontWeight: "700",
     color: "#334155",
+  },
+  instituteText: {
+    fontSize: 12,
+    color: "#475569",
     marginTop: 3,
   },
   programText: {
     fontSize: 11,
     color: "#64748B",
-    marginTop: 2,
+    marginTop: 3,
+  },
+  descriptionText: {
+    fontSize: 11,
+    color: "#64748B",
+    marginTop: 3,
+    lineHeight: 16,
   },
 
   cardDivider: {
@@ -1371,6 +1927,49 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
 
+  // Standard plan form section
+  planSection: {
+    backgroundColor: "#F0F9F6",
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#C8E8DE",
+    gap: 10,
+  },
+  totalClassesBox: {
+    backgroundColor: "#E0F2EC",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderWidth: 1,
+    borderColor: "#B7DDD4",
+  },
+  totalClassesLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+    flex: 1,
+  },
+  totalClassesTitle: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#315D54",
+  },
+  totalClassesFormula: {
+    fontSize: 10,
+    color: "#64748B",
+    marginTop: 3,
+  },
+  totalClassesNumber: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: PRIMARY_COLOR,
+    marginLeft: 8,
+  },
+
   // Rate section
   rateSection: {
     backgroundColor: "#F8FAFC",
@@ -1491,6 +2090,7 @@ const styles = StyleSheet.create({
 });
 
 export default AdminSubjectScreen;
+
 
 
 

@@ -390,109 +390,127 @@ const StudentFindTutorNonVisiting = ({ navigation, route }) => {
   // SEND REQUEST
   // ======================================================
 
-  const sendRequest = async () => {
-    if (requestLoading) return;
+  
+const sendRequest = async () => {
+  if (requestLoading) return;
 
-    try {
-      if (selectedTutors.length === 0) {
-        Alert.alert("Validation Error", "Please select at least one tutor.");
-        return;
-      }
+  try {
+    // =====================================
+    // STEP 1: BASIC VALIDATION
+    // =====================================
 
-      if (!courseId) {
-        Alert.alert("Validation Error", "Course is not selected.");
-        return;
-      }
+    if (!selectedTutors.length) {
+      Alert.alert("Validation Error", "Please select at least one tutor.");
+      return;
+    }
 
-      if (!selectedRequestDay) {
-        Alert.alert("Validation Error", "Please select a day.");
-        return;
-      }
+    if (!courseId) {
+      Alert.alert("Validation Error", "Course is not selected.");
+      return;
+    }
 
-      if (!selectedRequestTime) {
-        Alert.alert("Validation Error", "Please select a time slot.");
-        return;
-      }
+    if (!selectedRequestDay || !selectedRequestTime) {
+      Alert.alert("Validation Error", "Please select a valid day and time.");
+      return;
+    }
 
-      if (!learningMode) {
-        Alert.alert("Validation Error", "Learning mode is required.");
-        return;
-      }
+    if (!learningMode) {
+      Alert.alert("Validation Error", "Learning mode is required.");
+      return;
+    }
 
-      let durationValue = null;
-      let durationUnitValue = null;
+    // =====================================
+    // STEP 2: LEARNING MODE VALIDATION
+    // =====================================
 
-      if (learningMode === "SpecificTime") {
-        const parsedDuration = Number(String(learningDuration).trim());
+    let durationValue = null;
+    let durationUnitValue = null;
 
-        if (
-          !String(learningDuration).trim() ||
-          !Number.isFinite(parsedDuration) ||
-          parsedDuration <= 0
-        ) {
-          Alert.alert(
-            "Validation Error",
-            "Please enter a valid duration greater than zero."
-          );
-          return;
-        }
+    if (learningMode === "SpecificTime") {
+      const duration = Number(learningDuration);
 
-        durationValue = parsedDuration;
-        durationUnitValue = learningDurationUnit;
-      }
-
-      const tutorIds = selectedTutors
-        .map((t) => Number(t?.tutor_id))
-        .filter((id) => Number.isInteger(id) && id > 0);
-
-      if (tutorIds.length === 0) {
-        Alert.alert("Validation Error", "No valid tutor was selected.");
-        return;
-      }
-
-      const uniqueTutorIds = [...new Set(tutorIds)];
-
-      // =====================================
-      // VALIDATE ACCELERATED PLAN
-      // =====================================
-
-      let acceleratedDuration = null;
-      let acceleratedClassesPerWeek = null;
-      let acceleratedStartDate = null;
-
-      if (planType === "Accelerated") {
-        acceleratedDuration = Number(String(requestedDurationWeeks).trim());
-
-        acceleratedClassesPerWeek = Number(
-          String(requestedClassesPerWeek).trim()
+      if (
+        !String(learningDuration).trim() ||
+        !Number.isFinite(duration) ||
+        duration <= 0
+      ) {
+        Alert.alert(
+          "Validation Error",
+          "Please enter a valid learning duration."
         );
+        return;
+      }
 
-        acceleratedStartDate = String(planStartDate).trim();
+      if (!DURATION_UNITS.includes(learningDurationUnit)) {
+        Alert.alert("Validation Error", "Please select a valid duration unit.");
+        return;
+      }
 
-        if (
-          !Number.isInteger(acceleratedDuration) ||
-          acceleratedDuration <= 0
-        ) {
-          Alert.alert(
-            "Invalid Duration",
-            "Please enter a valid course duration in weeks."
-          );
-          return;
-        }
+      durationValue = duration;
+      durationUnitValue = learningDurationUnit;
+    }
 
-        if (
-          !Number.isInteger(acceleratedClassesPerWeek) ||
-          acceleratedClassesPerWeek <= 0
-        ) {
-          Alert.alert(
-            "Invalid Classes",
-            "Please enter a valid number of classes per week."
-          );
-          return;
-        }
+    // =====================================
+    // STEP 3: VALIDATE TUTOR IDS
+    // =====================================
 
-        // Validate YYYY-MM-DD format
-        const dateMatch = acceleratedStartDate.match(
+    const tutorIds = [
+      ...new Set(
+        selectedTutors
+          .map((tutor) => Number(tutor.tutor_id))
+          .filter((id) => Number.isInteger(id) && id > 0)
+      ),
+    ];
+
+    if (!tutorIds.length) {
+      Alert.alert("Validation Error", "No valid tutor was selected.");
+      return;
+    }
+
+    // =====================================
+    // STEP 4: COURSE PLAN
+    // =====================================
+
+    let acceleratedDuration = null;
+    let acceleratedClassesPerWeek = null;
+    let acceleratedStartDate = null;
+
+    if (planType === "Accelerated") {
+      acceleratedDuration = Number(requestedDurationWeeks);
+
+      acceleratedClassesPerWeek = Number(
+        requestedClassesPerWeek
+      );
+
+      if (
+        !Number.isInteger(acceleratedDuration) ||
+        acceleratedDuration <= 0
+      ) {
+        Alert.alert(
+          "Invalid Duration",
+          "Please enter a valid course duration in weeks."
+        );
+        return;
+      }
+
+      if (
+        !Number.isInteger(acceleratedClassesPerWeek) ||
+        acceleratedClassesPerWeek <= 0
+      ) {
+        Alert.alert(
+          "Invalid Classes",
+          "Please enter a valid number of classes per week."
+        );
+        return;
+      }
+
+      // Start date is optional in the backend.
+      // If provided, validate YYYY-MM-DD.
+
+      const enteredDate = String(planStartDate || "").trim();
+
+      if (enteredDate) {
+        const dateMatch = enteredDate.match(
           /^(\d{4})-(\d{2})-(\d{2})$/
         );
 
@@ -516,10 +534,7 @@ const StudentFindTutorNonVisiting = ({ navigation, route }) => {
           parsedDate.getDate() === day;
 
         if (!validDate) {
-          Alert.alert(
-            "Invalid Start Date",
-            "Please enter a valid calendar date."
-          );
+          Alert.alert("Invalid Start Date", "Please enter a valid date.");
           return;
         }
 
@@ -533,55 +548,67 @@ const StudentFindTutorNonVisiting = ({ navigation, route }) => {
           );
           return;
         }
+
+        acceleratedStartDate = enteredDate;
       }
+    }
 
-      // =====================================
-      // CREATE REQUEST BODY
-      // =====================================
+    // =====================================
+    // STEP 5: CREATE BACKEND REQUEST BODY
+    // =====================================
 
-      const requestBody = {
-        tutor_ids: uniqueTutorIds,
+    const requestBody = {
+      tutor_ids: tutorIds,
 
-        course_id: Number(courseId),
+      course_id: Number(courseId),
 
-        day: String(selectedRequestDay).trim(),
+      day: String(selectedRequestDay).trim(),
 
-        time: String(selectedRequestTime).trim(),
+      time: String(selectedRequestTime).trim(),
 
-        learning_mode: learningMode,
+      learning_mode: learningMode,
 
-        learning_duration: durationValue,
+      learning_duration: durationValue,
 
-        learning_duration_unit: durationUnitValue,
+      learning_duration_unit: durationUnitValue,
 
-        // Accelerated course plan (null values for the Normal plan)
-        plan_type: planType,
+      plan_type: planType,
 
-        requested_duration_weeks: acceleratedDuration,
+      requested_duration_weeks: acceleratedDuration,
 
-        requested_classes_per_week: acceleratedClassesPerWeek,
+      requested_classes_per_week: acceleratedClassesPerWeek,
 
-        start_date: acceleratedStartDate,
-      };
+      start_date: acceleratedStartDate,
+    };
 
-      console.log(
-        "CREATE NON-VISITING TUTOR REQUEST:",
-        JSON.stringify(requestBody, null, 2)
+    console.log(
+      "CREATE TUTOR REQUEST BODY:",
+      JSON.stringify(requestBody, null, 2)
+    );
+
+    // =====================================
+    // STEP 6: AUTHENTICATION
+    // =====================================
+
+    const token = await AsyncStorage.getItem("token");
+
+    if (!token) {
+      Alert.alert(
+        "Authentication Error",
+        "Your login session has expired. Please login again."
       );
+      return;
+    }
 
-      const token = await AsyncStorage.getItem("token");
+    // =====================================
+    // STEP 7: SEND REQUEST
+    // =====================================
 
-      if (!token) {
-        Alert.alert(
-          "Authentication Error",
-          "Your login session has expired. Please login again."
-        );
-        return;
-      }
+    setRequestLoading(true);
 
-      setRequestLoading(true);
-
-      const response = await fetch(`${BASE_URL}/Student/create-request`, {
+    const response = await fetch(
+      `${BASE_URL}/Student/create-request`,
+      {
         method: "POST",
         headers: {
           Accept: "application/json",
@@ -589,101 +616,161 @@ const StudentFindTutorNonVisiting = ({ navigation, route }) => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(requestBody),
-      });
-
-      const responseText = await response.text();
-
-      console.log("CREATE REQUEST STATUS:", response.status);
-      console.log("CREATE REQUEST RESPONSE:", responseText);
-
-      let data = {};
-      try {
-        data = responseText ? JSON.parse(responseText) : {};
-      } catch (parseError) {
-        console.log("RESPONSE JSON PARSE ERROR:", parseError);
-        data = { message: responseText || "Unknown server response." };
       }
+    );
 
-      // ---------------- SUCCESS ----------------
-      if (response.ok) {
-        const totalTutors = data?.total_tutors ?? uniqueTutorIds.length;
-        const currentTutorId = data?.current_tutor_id;
-        const requestGroupId = data?.request_group_id;
+    const responseText = await response.text();
 
-        setRequestModal(false);
-        setSelectedTutors([]);
-        setSelectedRequestDay("");
-        setSelectedRequestTime("");
-        resetLearningFields();
+    let data = {};
 
-        let successMessage =
-          data?.message || "Tutor request created successfully.";
-
-        successMessage += `\n\n${totalTutors} tutor${
-          totalTutors === 1 ? "" : "s"
-        } selected.`;
-
-        if (currentTutorId) {
-          successMessage += `\n\nRequest started with Tutor #${currentTutorId}.`;
-        }
-
-        if (data?.response_deadline) {
-          successMessage += `\nFirst tutor has 2 minutes to accept.`;
-        }
-
-        if (requestGroupId) {
-          successMessage += `\n\nRequest Group ID: ${requestGroupId}`;
-        }
-
-        Alert.alert("Request Sent", successMessage);
-
-        // Refresh availability (LT capacity / slots may have changed)
-        fetchTutors(sortBy);
-        return;
-      }
-
-      // ---------------- BACKEND ERROR ----------------
-      const serverMessage =
-        data?.message ||
-        data?.error ||
-        data?.title ||
-        data?.detail ||
-        `Server returned HTTP ${response.status}.`;
-
-      let additionalMessage = "";
-
-      if (data?.request_group_id) {
-        additionalMessage += `\n\nRequest Group ID: ${data.request_group_id}`;
-      }
-
-      if (
-        Array.isArray(data?.missing_tutor_ids) &&
-        data.missing_tutor_ids.length > 0
-      ) {
-        additionalMessage += `\n\nMissing Tutor IDs: ${data.missing_tutor_ids.join(
-          ", "
-        )}`;
-      }
-
-      if (data?.inner_error) {
-        additionalMessage += `\n\nDetails: ${data.inner_error}`;
-      }
-
-      Alert.alert(
-        `Request Failed (${response.status})`,
-        `${serverMessage}${additionalMessage}`
-      );
+    try {
+      data = responseText ? JSON.parse(responseText) : {};
     } catch (error) {
-      console.log("CREATE REQUEST NETWORK ERROR:", error);
+      data = {
+        message: responseText || "Invalid server response.",
+      };
+    }
+
+    console.log("CREATE REQUEST STATUS:", response.status);
+    console.log("CREATE REQUEST RESPONSE:", data);
+
+    // =====================================
+    // STEP 8: SUCCESS RESPONSE
+    // =====================================
+
+    if (response.ok && data?.success !== false) {
+      const totalTutors = data?.total_tutors ?? tutorIds.length;
+
+      setRequestModal(false);
+
+      setSelectedTutors([]);
+      setSelectedRequestDay("");
+      setSelectedRequestTime("");
+
+      resetLearningFields();
+
+      let successMessage =
+        data?.message || "Tutor request created successfully.";
+
+      successMessage += `\n\nRequest Group ID: ${
+        data?.request_group_id ?? "N/A"
+      }`;
+
+      successMessage += `\nRequest ID: ${
+        data?.request_id ?? "N/A"
+      }`;
+
+      successMessage += `\n\nTotal Tutors: ${totalTutors}`;
+
+      successMessage += `\n\nCourse Plan: ${
+        data?.plan_type || planType
+      }`;
+
+      successMessage += `\nOriginal Duration: ${
+        data?.original_duration_weeks ?? "N/A"
+      } weeks`;
+
+      successMessage += `\nOriginal Classes Per Week: ${
+        data?.original_classes_per_week ?? "N/A"
+      }`;
+
+      successMessage += `\nRequested Duration: ${
+        data?.requested_duration_weeks ?? "N/A"
+      } weeks`;
+
+      successMessage += `\nRequested Classes Per Week: ${
+        data?.requested_classes_per_week ?? "N/A"
+      }`;
+
+      successMessage += `\nTotal Classes: ${
+        data?.total_classes ?? "N/A"
+      }`;
+
+      successMessage += `\n\nStart Date: ${
+        data?.start_date ?? "N/A"
+      }`;
+
+      if (data?.current_tutor_id) {
+        successMessage += `\n\nFirst Tutor ID: ${data.current_tutor_id}`;
+      }
+
+      if (data?.response_deadline) {
+        successMessage += "\nFirst tutor has 2 minutes to accept.";
+      }
 
       Alert.alert(
-        "Request Failed",
-        error?.message || "Unable to connect to the server."
+        "Request Sent Successfully",
+        successMessage,
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              fetchTutors(sortBy);
+            },
+          },
+        ]
       );
-    } finally {
-      setRequestLoading(false);
+
+      return;
     }
-  };
+
+    // =====================================
+    // STEP 9: BACKEND VALIDATION ERRORS
+    // =====================================
+
+    const serverMessage =
+      data?.message ||
+      data?.error ||
+      data?.title ||
+      data?.detail ||
+      `Server returned HTTP ${response.status}.`;
+
+    let additionalMessage = "";
+
+    if (data?.request_group_id) {
+      additionalMessage +=
+        `\n\nRequest Group ID: ${data.request_group_id}`;
+    }
+
+    if (data?.original_total_classes != null) {
+      additionalMessage +=
+        `\n\nOriginal Total Classes: ${data.original_total_classes}`;
+    }
+
+    if (data?.requested_total_classes != null) {
+      additionalMessage +=
+        `\nRequested Total Classes: ${data.requested_total_classes}`;
+    }
+
+    if (
+      Array.isArray(data?.missing_tutor_ids) &&
+      data.missing_tutor_ids.length > 0
+    ) {
+      additionalMessage +=
+        `\n\nMissing Tutor IDs: ${data.missing_tutor_ids.join(", ")}`;
+    }
+
+    if (data?.error) {
+      additionalMessage += `\n\nDetails: ${data.error}`;
+    }
+
+    Alert.alert(
+      `Request Failed (${response.status})`,
+      `${serverMessage}${additionalMessage}`
+    );
+
+  } catch (error) {
+    console.log("CREATE REQUEST ERROR:", error);
+
+    Alert.alert(
+      "Request Failed",
+      error?.message || "Unable to connect to the server."
+    );
+  } finally {
+    setRequestLoading(false);
+  }
+};
+
 
   // ======================================================
   // FLATTEN BACKEND RESPONSE

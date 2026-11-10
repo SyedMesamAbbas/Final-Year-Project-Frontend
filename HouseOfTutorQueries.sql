@@ -40,16 +40,44 @@ CREATE TABLE Student (
     FOREIGN KEY (user_id) REFERENCES Users(user_id)
 );
 
+
 CREATE TABLE Course (
     course_id INT PRIMARY KEY IDENTITY(1,1),
-    course_title VARCHAR(100),
-    admin_set_min_hourly_rate DECIMAL(10,2),
-    admin_set_max_hourly_rate DECIMAL(10,2),
-    has_lab_component BIT NOT NULL CONSTRAINT DF_Course_HasLab DEFAULT 0,
-    standard_duration_weeks INT NULL,
-    standard_classes_per_week INT NULL,
-);
 
+    course_title VARCHAR(100) NOT NULL,
+
+    admin_set_min_hourly_rate DECIMAL(10,2),
+
+    admin_set_max_hourly_rate DECIMAL(10,2),
+
+    has_lab_component BIT NOT NULL
+        CONSTRAINT DF_Course_HasLab DEFAULT 0,
+
+    -- Duration set by Admin
+    standard_duration_weeks INT NOT NULL,
+
+    -- Classes per week set by Admin
+    standard_classes_per_week INT NOT NULL,
+
+    -- Automatically calculates total classes
+    total_standard_classes AS
+    (
+        standard_duration_weeks * standard_classes_per_week
+    ) PERSISTED,
+
+    CONSTRAINT CK_Course_Duration
+        CHECK (standard_duration_weeks > 0),
+
+    CONSTRAINT CK_Course_ClassesPerWeek
+        CHECK (standard_classes_per_week > 0),
+
+    CONSTRAINT CK_Course_HourlyRate
+        CHECK (
+            admin_set_min_hourly_rate IS NULL
+            OR admin_set_max_hourly_rate IS NULL
+            OR admin_set_min_hourly_rate <= admin_set_max_hourly_rate
+        )
+);
 CREATE TABLE Schedule (
     schedule_id INT PRIMARY KEY IDENTITY(1,1),
     tutor_id INT,
@@ -694,6 +722,8 @@ Select * from LT_Room
 Select * from LT_Room_Schedule
 Select * from Student_Friend
 Select * from Study_Group_Invitation
+Select * from Request_Course_Plan
+
 
 Delete Request_Group where request_group_id=1007
 Delete Request where request_id=5068
@@ -855,6 +885,15 @@ VALUES
 ('Kotlin'),
 ('Swift'),
 ('SQL');
+
+
+
+
+
+
+
+
+
 
 
 
